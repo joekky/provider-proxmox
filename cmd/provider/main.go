@@ -38,9 +38,9 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
 
 	"github.com/joekky/provider-proxmox/apis"
-	"github.com/joekky/provider-proxmox/apis/v1alpha1"
+	"github.com/joekky/provider-proxmox/apis/proxmox/v1alpha1"
 	proxmox "github.com/joekky/provider-proxmox/internal/controller"
-	"github.com/joekky/provider-proxmox/internal/features"
+	"github.com/joekky/provider-proxmox/internal/controller/features"
 )
 
 func main() {

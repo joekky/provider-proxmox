@@ -22,7 +22,7 @@ ProviderNameUpper=${PROVIDER}
 ProviderNameLower=$(echo "${PROVIDER}" | tr "[:upper:]" "[:lower:]")
 
 git rm -r apis/sample
-git rm -r internal/controller/mytype
+# git rm -r internal/controller/mytype
 
 REPLACE_FILES='./* ./.github :!build/** :!go.* :!hack/**'
 # shellcheck disable=SC2086

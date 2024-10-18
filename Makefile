@@ -37,51 +37,35 @@ IMAGES = provider-proxmox
 # Setup XPKG
 
 XPKG_REG_ORGS ?= xpkg.upbound.io/crossplane
-# NOTE(hasheddan): skip promoting on xpkg.upbound.io as channel tags are
-# inferred.
 XPKG_REG_ORGS_NO_PROMOTE ?= xpkg.upbound.io/crossplane
 XPKGS = provider-proxmox
 -include build/makelib/xpkg.mk
 
-# NOTE(hasheddan): we force image building to happen prior to xpkg build so that
-# we ensure image is present in daemon.
+# ====================================================================================
+# Targets
+
 xpkg.build.provider-proxmox: do.build.images
 
 fallthrough: submodules
 	@echo Initial setup complete. Running make again . . .
 	@make
 
-# integration tests
 e2e.run: test-integration
 
-# Run integration tests.
 test-integration: $(KIND) $(KUBECTL) $(UP) $(HELM3)
 	@$(INFO) running integration tests using kind $(KIND_VERSION)
 	@KIND_NODE_IMAGE_TAG=${KIND_NODE_IMAGE_TAG} $(ROOT_DIR)/cluster/local/integration_tests.sh || $(FAIL)
 	@$(OK) integration tests passed
 
-# Update the submodules, such as the common build scripts.
 submodules:
 	@git submodule sync
 	@git submodule update --init --recursive
 
-# NOTE(hasheddan): the build submodule currently overrides XDG_CACHE_HOME in
-# order to force the Helm 3 to use the .work/helm directory. This causes Go on
-# Linux machines to use that directory as the build cache as well. We should
-# adjust this behavior in the build submodule because it is also causing Linux
-# users to duplicate their build cache, but for now we just make it easier to
-# identify its location in CI so that we cache between builds.
 go.cachedir:
 	@go env GOCACHE
 
-# NOTE(hasheddan): we must ensure up is installed in tool cache prior to build
-# as including the k8s_tools machinery prior to the xpkg machinery sets UP to
-# point to tool cache.
 build.init: $(UP)
 
-# This is for running out-of-cluster locally, and is for convenience. Running
-# this make target will print out the command which was used. For more control,
-# try running the binary directly with different arguments.
 run: go.build
 	@$(INFO) Running Crossplane locally out-of-cluster . . .
 	@# To see other arguments that can be provided, run the command with --help instead
@@ -102,12 +86,34 @@ dev-clean: $(KIND) $(KUBECTL)
 	@$(INFO) Deleting kind cluster
 	@$(KIND) delete cluster --name=$(PROJECT_NAME)-dev
 
-.PHONY: submodules fallthrough test-integration run dev dev-clean
+# ====================================================================================
+# Code Generation
+
+TOOLS_HOST_DIR ?= $(HOME)/.crossplane-tools
+CONTROLLER_GEN := $(shell which controller-gen)
+ifeq ($(CONTROLLER_GEN),)
+	CONTROLLER_GEN := $(GOBIN)/controller-gen
+endif
+
+.PHONY: controller-gen
+controller-gen: ## Download controller-gen locally if necessary.
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.9.2)
+
+.PHONY: generate
+generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	@echo "Generating deepcopy code"
+	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	@echo "Deepcopy code generation complete"
+
+.PHONY: manifests
+manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+	@echo "Generating CRD manifests"
+	@$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=package/crds
+	@echo "CRD manifest generation complete"
 
 # ====================================================================================
 # Special Targets
 
-# Install gomplate
 GOMPLATE_VERSION := 3.10.0
 GOMPLATE := $(TOOLS_HOST_DIR)/gomplate-$(GOMPLATE_VERSION)
 
@@ -120,24 +126,10 @@ $(GOMPLATE):
 
 export GOMPLATE
 
-# This target prepares repo for your provider by replacing all "proxmox"
-# occurrences with your provider name.
-# This target can only be run once, if you want to rerun for some reason,
-# consider stashing/resetting your git state.
-# Arguments:
-#   provider: Camel case name of your provider, e.g. GitHub, PlanetScale
 provider.prepare:
 	@[ "${provider}" ] || ( echo "argument \"provider\" is not set"; exit 1 )
 	@PROVIDER=$(provider) ./hack/helpers/prepare.sh
 
-# This target adds a new api type and its controller.
-# You would still need to register new api in "apis/<provider>.go" and
-# controller in "internal/controller/<provider>.go".
-# Arguments:
-#   provider: Camel case name of your provider, e.g. GitHub, PlanetScale
-#   group: API group for the type you want to add.
-#   kind: Kind of the type you want to add
-#	apiversion: API version of the type you want to add. Optional and defaults to "v1alpha1"
 provider.addtype: $(GOMPLATE)
 	@[ "${provider}" ] || ( echo "argument \"provider\" is not set"; exit 1 )
 	@[ "${group}" ] || ( echo "argument \"group\" is not set"; exit 1 )
@@ -150,8 +142,6 @@ Crossplane Targets:
     run                   Run crossplane locally, out-of-cluster. Useful for development.
 
 endef
-# The reason CROSSPLANE_MAKE_HELP is used instead of CROSSPLANE_HELP is because the crossplane
-# binary will try to use CROSSPLANE_HELP if it is set, and this is for something different.
 export CROSSPLANE_MAKE_HELP
 
 crossplane.help:
@@ -159,4 +149,4 @@ crossplane.help:
 
 help-special: crossplane.help
 
-.PHONY: crossplane.help help-special
+.PHONY: submodules fallthrough test-integration run dev dev-clean generate manifests controller-gen crossplane.help help-special
