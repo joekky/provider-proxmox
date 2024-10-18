@@ -1,53 +1,20 @@
-/*
-Copyright 2021 The Crossplane Authors.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
-
-// Package v1alpha1 contains the v1alpha1 group Sample resources of the Template provider.
 // +kubebuilder:object:generate=true
 // +groupName=proxmox.crossplane.io
-// +versionName=v1alpha1
+
 package v1alpha1
 
 import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
-// Package type metadata.
-const (
-	Group   = "proxmox.crossplane.io"
-	Version = "v1alpha1"
-)
+// GroupVersion is the group and version for the Proxmox API.
+var GroupVersion = schema.GroupVersion{Group: "proxmox.crossplane.io", Version: "v1alpha1"}
 
 var (
-	// SchemeGroupVersion is group version used to register these objects
-	SchemeGroupVersion = schema.GroupVersion{Group: Group, Version: Version}
+	// SchemeBuilder initializes a scheme builder
+	SchemeBuilder = &metav1.SchemeBuilder{Register: AddToScheme}
 
-	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
-	SchemeBuilder = &scheme.Builder{GroupVersion: SchemeGroupVersion}
+	// AddToScheme is a method to add this group-version to a runtime.Scheme
+	AddToScheme = SchemeBuilder.AddToScheme
 )
-
-// VirtualMachine type metadata.
-var (
-	VirtualMachineKind             = "VirtualMachine"
-	VirtualMachineGroupKind        = schema.GroupKind{Group: Group, Kind: VirtualMachineKind}.String()
-	VirtualMachineKindAPIVersion   = VirtualMachineKind + "." + SchemeGroupVersion.String()
-	VirtualMachineGroupVersionKind = SchemeGroupVersion.WithKind(VirtualMachineKind)
-)
-
-func init() {
-	SchemeBuilder.Register(&VirtualMachine{}, &VirtualMachineList{})
-}
-
