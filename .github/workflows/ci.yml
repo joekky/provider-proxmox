@@ -10,9 +10,10 @@ on:
 
 env:
   # Common versions
-  GO_VERSION: '1.21'
-  GOLANGCI_VERSION: 'v1.54.0'
-  DOCKER_BUILDX_VERSION: 'v0.9.1'
+  GO_VERSION: "1.21"
+  GOLANGCI_VERSION: "v1.54.0"
+  DOCKER_BUILDX_VERSION: "v0.9.1"
+  # IMAGE_NAME: ghcr.io/joekky/provider-proxmox
 
   # Common users. We can't run a step 'if secrets.XXX != ""' but we can run a
   # step 'if env.XXX' != ""', so we copy these to succinctly test whether
@@ -31,7 +32,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           paths_ignore: '["**.md", "**.png", "**.jpg"]'
           do_not_skip: '["workflow_dispatch", "schedule", "push"]'
-
 
   lint:
     runs-on: ubuntu-22.04
@@ -173,78 +173,114 @@ jobs:
           flags: unittests
           file: _output/tests/linux_amd64/coverage.txt
 
+  # publish-artifacts:
+  #   runs-on: ubuntu-22.04
+  #   needs: detect-noop
+  #   if: needs.detect-noop.outputs.noop != 'true'
+  #
+  #   steps:
+  #     - name: Setup QEMU
+  #       uses: docker/setup-qemu-action@v2
+  #       with:
+  #         platforms: all
+  #
+  #     - name: Setup Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
+  #       with:
+  #         version: ${{ env.DOCKER_BUILDX_VERSION }}
+  #         install: true
+  #
+  #     - name: Login to Upbound
+  #       uses: docker/login-action@v1
+  #       if: env.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR != ''
+  #       with:
+  #         registry: xpkg.upbound.io
+  #         username: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR }}
+  #         password: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_PSW }}
+  #
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
+  #       with:
+  #         submodules: true
+  #
+  #     - name: Fetch History
+  #       run: git fetch --prune --unshallow
+  #
+  #     - name: Setup Go
+  #       uses: actions/setup-go@v3
+  #       with:
+  #         go-version: ${{ env.GO_VERSION }}
+  #
+  #     - name: Find the Go Build Cache
+  #       id: go
+  #       run: echo "cachedir=$(make go.cachedir)" >> $GITHUB_ENV
+  #
+  #     - name: Cache the Go Build Cache
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: ${{ env.cachedir }}
+  #         key: ${{ runner.os }}-build-publish-artifacts-${{ hashFiles('**/go.sum') }}
+  #         restore-keys: ${{ runner.os }}-build-publish-artifacts-
+  #
+  #     - name: Cache Go Dependencies
+  #       uses: actions/cache@v3
+  #       with:
+  #         path: .work/pkg
+  #         key: ${{ runner.os }}-pkg-${{ hashFiles('**/go.sum') }}
+  #         restore-keys: ${{ runner.os }}-pkg-
+  #
+  #     - name: Download Go Modules
+  #       run: make modules.download modules.check
+  #
+  #     - name: Build Artifacts
+  #       run: make -j2 build.all
+  #       env:
+  #         # We're using docker buildx, which doesn't actually load the images it
+  #         # builds by default. Specifying --load does so.
+  #         BUILD_ARGS: "--load"
+  #
+  #     - name: Publish Artifacts to GitHub
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: output
+  #         path: _output/**
+  #
+  #     - name: Publish Artifacts
+  #       if: env.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR != ''
+  #       run: make publish BRANCH_NAME=${GITHUB_REF##*/}
+
   publish-artifacts:
-    runs-on: ubuntu-22.04
-    needs: detect-noop
+    runs-on: ubuntu-latest
+    needs: [lint, unit-tests, check-diff] # Adjust as per your workflow
     if: needs.detect-noop.outputs.noop != 'true'
 
     steps:
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
-
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          version: ${{ env.DOCKER_BUILDX_VERSION }}
-          install: true
-
-      - name: Login to Upbound
-        uses: docker/login-action@v1
-        if: env.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR != ''
-        with:
-          registry: xpkg.upbound.io
-          username: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR }}
-          password: ${{ secrets.UPBOUND_MARKETPLACE_PUSH_ROBOT_PSW }}
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
 
-      - name: Fetch History
-        run: git fetch --prune --unshallow
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-      - name: Setup Go
-        uses: actions/setup-go@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          go-version: ${{ env.GO_VERSION }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Find the Go Build Cache
-        id: go
-        run: echo "cachedir=$(make go.cachedir)" >> $GITHUB_ENV
-
-      - name: Cache the Go Build Cache
-        uses: actions/cache@v3
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
         with:
-          path: ${{ env.cachedir }}
-          key: ${{ runner.os }}-build-publish-artifacts-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-build-publish-artifacts-
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:latest
 
-      - name: Cache Go Dependencies
-        uses: actions/cache@v3
-        with:
-          path: .work/pkg
-          key: ${{ runner.os }}-pkg-${{ hashFiles('**/go.sum') }}
-          restore-keys: ${{ runner.os }}-pkg-
-
-      - name: Download Go Modules
-        run: make modules.download modules.check
-
-      - name: Build Artifacts
-        run: make -j2 build.all
-        env:
-          # We're using docker buildx, which doesn't actually load the images it
-          # builds by default. Specifying --load does so.
-          BUILD_ARGS: "--load"
-
-      - name: Publish Artifacts to GitHub
-        uses: actions/upload-artifact@v3
-        with:
-          name: output
-          path: _output/**
-
-      - name: Publish Artifacts
-        if: env.UPBOUND_MARKETPLACE_PUSH_ROBOT_USR != ''
-        run: make publish BRANCH_NAME=${GITHUB_REF##*/}
+      - name: Logout from GitHub Container Registry
+        run: docker logout ghcr.io
