@@ -18,7 +18,7 @@ RUN go mod download
 COPY . .
 
 # Build the binary
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o provider .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o provider ./cmd/provider
 
 # Final image
 FROM alpine:latest
@@ -34,4 +34,3 @@ USER crossplane
 
 # Command to run the provider
 ENTRYPOINT ["./provider"]
-
