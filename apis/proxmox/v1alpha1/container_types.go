@@ -66,4 +66,3 @@ type ContainerList struct {
 func init() {
 	SchemeBuilder.Register(&Container{}, &ContainerList{})
 }
-
