@@ -3,8 +3,11 @@ kind: Provider
 metadata:
   name: provider-proxmox
   annotations:
-    meta.crossplane.io/maintainer: Crossplane Maintainers <info@crossplane.io>
-    meta.crossplane.io/source: github.com/crossplane/provider-proxmox
+    meta.crossplane.io/maintainer: Your Name <your-email@example.com>
+    meta.crossplane.io/source: github.com/joekky/provider-proxmox
     meta.crossplane.io/license: Apache-2.0
     meta.crossplane.io/description: |
-      A proxmox that can be used to create Crossplane providers.
+      A Proxmox provider for Crossplane.
+spec:
+  controller:
+    image: ghcr.io/joekky/provider-proxmox:latest
