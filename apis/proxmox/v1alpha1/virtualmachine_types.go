@@ -1,27 +1,15 @@
+// File: apis/proxmox/v1alpha1/virtualmachine_types.go
+
+/*
+Licensed under the Apache License, Version 2.0...
+*/
+
 package v1alpha1
 
 import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster,categories={proxmox,managed}
-
-// VirtualMachine is the Schema for the virtualmachines API
-type VirtualMachine struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              VirtualMachineSpec   `json:"spec,omitempty"`
-	Status            VirtualMachineStatus `json:"status,omitempty"`
-}
-
-// VirtualMachineSpec defines the desired state of VirtualMachine
-type VirtualMachineSpec struct {
-	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       VirtualMachineParameters `json:"forProvider"`
-}
 
 // VirtualMachineParameters defines the desired state of VirtualMachine
 type VirtualMachineParameters struct {
@@ -38,16 +26,35 @@ type VirtualMachineParameters struct {
 	Memory int `json:"memory"`
 }
 
-// VirtualMachineStatus defines the observed state of VirtualMachine
+// VirtualMachineObservation defines the observed state of VirtualMachine
+type VirtualMachineObservation struct {
+	// ID is the ID of the virtual machine in Proxmox
+	ID string `json:"id,omitempty"`
+}
+
+// VirtualMachineSpec defines the desired state of a VirtualMachine.
+type VirtualMachineSpec struct {
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       VirtualMachineParameters `json:"forProvider"`
+}
+
+// VirtualMachineStatus represents the observed state of a VirtualMachine.
 type VirtualMachineStatus struct {
 	xpv1.ResourceStatus `json:",inline"`
 	AtProvider          VirtualMachineObservation `json:"atProvider,omitempty"`
 }
 
-// VirtualMachineObservation represents the observed state of a VirtualMachine
-type VirtualMachineObservation struct {
-	// ID is the ID of the virtual machine in Proxmox
-	ID string `json:"id,omitempty"`
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,proxmox}
+
+// VirtualMachine is the Schema for the virtualmachines API
+type VirtualMachine struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   VirtualMachineSpec   `json:"spec"`
+	Status VirtualMachineStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true

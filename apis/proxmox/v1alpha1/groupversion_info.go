@@ -1,7 +1,13 @@
-package v1alpha1
+// File: apis/proxmox/v1alpha1/groupversion_info.go
+
+/*
+Licensed under the Apache License, Version 2.0...
+*/
 
 // +kubebuilder:object:generate=true
 // +groupName=proxmox.crossplane.io
+
+package v1alpha1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
