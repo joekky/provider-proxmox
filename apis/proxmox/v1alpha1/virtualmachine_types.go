@@ -21,9 +21,8 @@ type VirtualMachineObservation struct {
 
 // VirtualMachineSpec defines the desired state of a VirtualMachine.
 type VirtualMachineSpec struct {
-	xpv1.ResourceSpec  `json:",inline"`
-	ForProvider        VirtualMachineParameters `json:"forProvider"`
-	ManagementPolicies xpv1.ManagementPolicies  `json:"managementPolicies,omitempty"`
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       VirtualMachineParameters `json:"forProvider"`
 }
 
 // VirtualMachineStatus represents the observed state of a VirtualMachine.
@@ -45,7 +44,7 @@ type VirtualMachine struct {
 	Status VirtualMachineStatus `json:"status,omitempty"`
 }
 
-// Implement resource.Managed interface
+// Ensure VirtualMachine implements resource.Managed interface
 var _ resource.Managed = &VirtualMachine{}
 
 // GetCondition of this VirtualMachine
@@ -66,6 +65,16 @@ func (vm *VirtualMachine) GetProviderConfigReference() *xpv1.Reference {
 // SetProviderConfigReference of this VirtualMachine
 func (vm *VirtualMachine) SetProviderConfigReference(r *xpv1.Reference) {
 	vm.Spec.ProviderConfigReference = r
+}
+
+// GetPublishConnectionDetailsTo returns the publishing configuration of this VirtualMachine.
+func (vm *VirtualMachine) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return vm.Spec.PublishConnectionDetailsTo
+}
+
+// SetPublishConnectionDetailsTo sets the publishing configuration of this VirtualMachine.
+func (vm *VirtualMachine) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	vm.Spec.PublishConnectionDetailsTo = r
 }
 
 // GetWriteConnectionSecretToReference of this VirtualMachine

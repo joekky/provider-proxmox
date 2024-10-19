@@ -24,9 +24,8 @@ type ContainerObservation struct {
 
 // ContainerSpec defines the desired state of Container
 type ContainerSpec struct {
-	xpv1.ResourceSpec  `json:",inline"`
-	ForProvider        ContainerParameters     `json:"forProvider"`
-	ManagementPolicies xpv1.ManagementPolicies `json:"managementPolicies,omitempty"`
+	xpv1.ResourceSpec `json:",inline"`
+	ForProvider       ContainerParameters `json:"forProvider"`
 }
 
 // ContainerStatus defines the observed state of Container
@@ -48,7 +47,7 @@ type Container struct {
 	Status ContainerStatus `json:"status,omitempty"`
 }
 
-// Implementing resource.Managed interface
+// Ensure Container implements resource.Managed interface
 var _ resource.Managed = &Container{}
 
 // GetCondition of this Container
@@ -69,6 +68,16 @@ func (c *Container) GetProviderConfigReference() *xpv1.Reference {
 // SetProviderConfigReference of this Container
 func (c *Container) SetProviderConfigReference(r *xpv1.Reference) {
 	c.Spec.ProviderConfigReference = r
+}
+
+// GetPublishConnectionDetailsTo returns the publishing configuration of this Container.
+func (c *Container) GetPublishConnectionDetailsTo() *xpv1.PublishConnectionDetailsTo {
+	return c.Spec.PublishConnectionDetailsTo
+}
+
+// SetPublishConnectionDetailsTo sets the publishing configuration of this Container.
+func (c *Container) SetPublishConnectionDetailsTo(r *xpv1.PublishConnectionDetailsTo) {
+	c.Spec.PublishConnectionDetailsTo = r
 }
 
 // GetWriteConnectionSecretToReference of this Container
