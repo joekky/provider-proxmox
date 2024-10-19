@@ -1,31 +1,4 @@
-// package container
-
-// // Import necessary packages
-
-// func Setup(mgr ctrl.Manager, o controller.Options) error {
-//     // Setup logic similar to VirtualMachine
-// }
-
-// type external struct {
-//     client ProxmoxClient
-// }
-
-// func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-//     // Implement observation logic
-// }
-
-// func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-//     // Implement creation logic
-// }
-
-// func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-//     // Implement update logic
-// }
-
-// func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-//     // Implement deletion logic
-// }
-// -----
+// internal/controller/container/container.go
 
 package container
 
@@ -41,6 +14,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
+	"github.com/crossplane/crossplane-runtime/pkg/logging"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -58,8 +32,12 @@ const (
 	errNewClient    = "cannot create new Service"
 )
 
+// Setup adds a controller that reconciles Container managed resources.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
 	name := managed.ControllerName(v1alpha1.ContainerGroupKind)
+
+	logger := o.Logger.WithValues("controller", name)
+	recorder := event.NewAPIRecorder(mgr.GetEventRecorderFor(name))
 
 	cps := []managed.ConnectionPublisher{managed.NewAPISecretPublisher(mgr.GetClient(), mgr.GetScheme())}
 	if o.Features.Enabled(features.EnableAlphaExternalSecretStores) {
@@ -69,12 +47,14 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 	r := managed.NewReconciler(mgr,
 		resource.ManagedKind(v1alpha1.ContainerGroupVersionKind),
 		managed.WithExternalConnecter(&connector{
-			kube:  mgr.GetClient(),
-			usage: resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
+			kube:   mgr.GetClient(),
+			usage:  resource.NewProviderConfigUsageTracker(mgr.GetClient(), &apisv1alpha1.ProviderConfigUsage{}),
+			logger: logger,
 		}),
-		managed.WithLogger(o.Logger.WithValues("controller", name)),
-		managed.WithRecorder(event.NewAPIRecorder(mgr.GetEventRecorderFor(name))),
-		managed.WithConnectionPublishers(cps...))
+		managed.WithLogger(logger),
+		managed.WithRecorder(recorder),
+		managed.WithConnectionPublishers(cps...),
+	)
 
 	return ctrl.NewControllerManagedBy(mgr).
 		Named(name).
@@ -84,8 +64,9 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 }
 
 type connector struct {
-	kube  client.Client
-	usage resource.Tracker
+	kube   client.Client
+	usage  resource.Tracker
+	logger logging.Logger
 }
 
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
@@ -180,4 +161,3 @@ func newProxmoxService(data []byte) (interface{}, error) {
 	// TODO: Implement the actual Proxmox client creation here
 	return nil, nil
 }
-
