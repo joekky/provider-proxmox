@@ -2,12 +2,6 @@ apiVersion: meta.pkg.crossplane.io/v1alpha1
 kind: Provider
 metadata:
   name: provider-proxmox
-  annotations:
-    meta.crossplane.io/maintainer: Your Name <your-email@example.com>
-    meta.crossplane.io/source: github.com/joekky/provider-proxmox
-    meta.crossplane.io/license: Apache-2.0
-    meta.crossplane.io/description: |
-      A Proxmox provider for Crossplane.
 spec:
   controller:
     image: ghcr.io/joekky/provider-proxmox:latest
