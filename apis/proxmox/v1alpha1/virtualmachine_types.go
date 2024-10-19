@@ -59,3 +59,6 @@ type VirtualMachineList struct {
 	Items           []VirtualMachine `json:"items"`
 }
 
+func init() {
+	SchemeBuilder.Register(&VirtualMachine{}, &VirtualMachineList{})
+}
