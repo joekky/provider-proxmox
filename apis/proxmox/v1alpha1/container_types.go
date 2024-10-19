@@ -8,6 +8,7 @@ package v1alpha1
 
 import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -52,6 +53,59 @@ type Container struct {
 
 	Spec   ContainerSpec   `json:"spec"`
 	Status ContainerStatus `json:"status,omitempty"`
+}
+
+// Implementing resource.Managed interface
+var _ resource.Managed = &Container{}
+
+// GetCondition of this Container
+func (c *Container) GetCondition(ct xpv1.ConditionType) xpv1.Condition {
+	return c.Status.GetCondition(ct)
+}
+
+// SetConditions of this Container
+func (c *Container) SetConditions(conditions ...xpv1.Condition) {
+	c.Status.SetConditions(conditions...)
+}
+
+// GetProviderConfigReference of this Container
+func (c *Container) GetProviderConfigReference() *xpv1.Reference {
+	return c.Spec.ProviderConfigReference
+}
+
+// SetProviderConfigReference of this Container
+func (c *Container) SetProviderConfigReference(r *xpv1.Reference) {
+	c.Spec.ProviderConfigReference = r
+}
+
+// Deprecated: Use GetProviderConfigReference.
+func (c *Container) GetProviderReference() *xpv1.Reference {
+	return c.Spec.ProviderReference
+}
+
+// Deprecated: Use SetProviderConfigReference.
+func (c *Container) SetProviderReference(r *xpv1.Reference) {
+	c.Spec.ProviderReference = r
+}
+
+// GetWriteConnectionSecretToReference of this Container
+func (c *Container) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
+	return c.Spec.WriteConnectionSecretToReference
+}
+
+// SetWriteConnectionSecretToReference of this Container
+func (c *Container) SetWriteConnectionSecretToReference(r *xpv1.SecretReference) {
+	c.Spec.WriteConnectionSecretToReference = r
+}
+
+// GetDeletionPolicy of this Container
+func (c *Container) GetDeletionPolicy() xpv1.DeletionPolicy {
+	return c.Spec.DeletionPolicy
+}
+
+// SetDeletionPolicy of this Container
+func (c *Container) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
+	c.Spec.DeletionPolicy = dp
 }
 
 // +kubebuilder:object:root=true
