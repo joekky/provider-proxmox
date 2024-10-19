@@ -1,9 +1,3 @@
-// File: apis/proxmox/v1alpha1/container_types.go
-
-/*
-Licensed under the Apache License, Version 2.0...
-*/
-
 package v1alpha1
 
 import (
@@ -20,20 +14,19 @@ type ContainerParameters struct {
 	Memory     int    `json:"memory"`
 	Swap       int    `json:"swap,omitempty"`
 	Cores      int    `json:"cores"`
-	// Add other fields from the Terraform schema
 }
 
 // ContainerObservation defines the observed state of a Proxmox Container
 type ContainerObservation struct {
 	ID     string `json:"id,omitempty"`
 	Status string `json:"status,omitempty"`
-	// Add other observed state fields
 }
 
 // ContainerSpec defines the desired state of Container
 type ContainerSpec struct {
-	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       ContainerParameters `json:"forProvider"`
+	xpv1.ResourceSpec  `json:",inline"`
+	ForProvider        ContainerParameters     `json:"forProvider"`
+	ManagementPolicies xpv1.ManagementPolicies `json:"managementPolicies,omitempty"`
 }
 
 // ContainerStatus defines the observed state of Container
@@ -78,16 +71,6 @@ func (c *Container) SetProviderConfigReference(r *xpv1.Reference) {
 	c.Spec.ProviderConfigReference = r
 }
 
-// Deprecated: Use GetProviderConfigReference.
-func (c *Container) GetProviderReference() *xpv1.Reference {
-	return c.Spec.ProviderReference
-}
-
-// Deprecated: Use SetProviderConfigReference.
-func (c *Container) SetProviderReference(r *xpv1.Reference) {
-	c.Spec.ProviderReference = r
-}
-
 // GetWriteConnectionSecretToReference of this Container
 func (c *Container) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return c.Spec.WriteConnectionSecretToReference
@@ -106,6 +89,16 @@ func (c *Container) GetDeletionPolicy() xpv1.DeletionPolicy {
 // SetDeletionPolicy of this Container
 func (c *Container) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
 	c.Spec.DeletionPolicy = dp
+}
+
+// GetManagementPolicies of this Container
+func (c *Container) GetManagementPolicies() xpv1.ManagementPolicies {
+	return c.Spec.ManagementPolicies
+}
+
+// SetManagementPolicies of this Container
+func (c *Container) SetManagementPolicies(p xpv1.ManagementPolicies) {
+	c.Spec.ManagementPolicies = p
 }
 
 // +kubebuilder:object:root=true

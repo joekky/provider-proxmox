@@ -1,9 +1,3 @@
-// apis/proxmox/v1alpha1/virtualmachine_types.go
-
-/*
-Licensed under the Apache License, Version 2.0...
-*/
-
 package v1alpha1
 
 import (
@@ -14,29 +8,22 @@ import (
 
 // VirtualMachineParameters defines the desired state of VirtualMachine
 type VirtualMachineParameters struct {
-	// Name is the name of the virtual machine in Proxmox
-	Name string `json:"name"`
-
-	// Node is the name of the Proxmox node to create the VM on
-	Node string `json:"node"`
-
-	// CPU is the number of CPU cores
-	CPU int `json:"cpu"`
-
-	// Memory is the size of RAM in MB
-	Memory int `json:"memory"`
+	Name   string `json:"name"`
+	Node   string `json:"node"`
+	CPU    int    `json:"cpu"`
+	Memory int    `json:"memory"`
 }
 
 // VirtualMachineObservation defines the observed state of VirtualMachine
 type VirtualMachineObservation struct {
-	// ID is the ID of the virtual machine in Proxmox
 	ID string `json:"id,omitempty"`
 }
 
 // VirtualMachineSpec defines the desired state of a VirtualMachine.
 type VirtualMachineSpec struct {
-	xpv1.ResourceSpec `json:",inline"`
-	ForProvider       VirtualMachineParameters `json:"forProvider"`
+	xpv1.ResourceSpec  `json:",inline"`
+	ForProvider        VirtualMachineParameters `json:"forProvider"`
+	ManagementPolicies xpv1.ManagementPolicies  `json:"managementPolicies,omitempty"`
 }
 
 // VirtualMachineStatus represents the observed state of a VirtualMachine.
@@ -81,16 +68,6 @@ func (vm *VirtualMachine) SetProviderConfigReference(r *xpv1.Reference) {
 	vm.Spec.ProviderConfigReference = r
 }
 
-// Deprecated: Use GetProviderConfigReference.
-func (vm *VirtualMachine) GetProviderReference() *xpv1.Reference {
-	return vm.Spec.ProviderReference
-}
-
-// Deprecated: Use SetProviderConfigReference.
-func (vm *VirtualMachine) SetProviderReference(r *xpv1.Reference) {
-	vm.Spec.ProviderReference = r
-}
-
 // GetWriteConnectionSecretToReference of this VirtualMachine
 func (vm *VirtualMachine) GetWriteConnectionSecretToReference() *xpv1.SecretReference {
 	return vm.Spec.WriteConnectionSecretToReference
@@ -109,6 +86,16 @@ func (vm *VirtualMachine) GetDeletionPolicy() xpv1.DeletionPolicy {
 // SetDeletionPolicy of this VirtualMachine
 func (vm *VirtualMachine) SetDeletionPolicy(dp xpv1.DeletionPolicy) {
 	vm.Spec.DeletionPolicy = dp
+}
+
+// GetManagementPolicies of this VirtualMachine
+func (vm *VirtualMachine) GetManagementPolicies() xpv1.ManagementPolicies {
+	return vm.Spec.ManagementPolicies
+}
+
+// SetManagementPolicies of this VirtualMachine
+func (vm *VirtualMachine) SetManagementPolicies(p xpv1.ManagementPolicies) {
+	vm.Spec.ManagementPolicies = p
 }
 
 // +kubebuilder:object:root=true
