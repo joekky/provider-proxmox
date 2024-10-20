@@ -3,5 +3,4 @@ kind: Provider
 metadata:
   name: provider-proxmox
 spec:
-  controller:
-    image: ghcr.io/joekky/provider-proxmox:latest
+  package: ghcr.io/joekky/provider-proxmox:latest
