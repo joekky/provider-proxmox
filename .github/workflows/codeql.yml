@@ -5,7 +5,14 @@ on:
     branches:
       - main
       - release-*
+  pull_request:
+    branches:
+      - main
   workflow_dispatch: {}
+
+permissions:
+  contents: read
+  security-events: write # Ensures that CodeQL can upload results properly
 
 jobs:
   detect-noop:
@@ -26,12 +33,20 @@ jobs:
     runs-on: ubuntu-22.04
     needs: detect-noop
     if: needs.detect-noop.outputs.noop != 'true'
+    permissions:
+      contents: read
+      security-events: write # Added permission for uploading security results
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
+
+      - name: Set up Go 1.18 # Set Go version explicitly to avoid invalid Go toolchain errors
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.18
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v2

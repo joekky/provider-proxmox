@@ -1,7 +1,0 @@
-apiVersion: meta.pkg.crossplane.io/v1alpha1
-kind: Provider
-metadata:
-  name: provider-proxmox
-spec:
-  controller:
-    image: ghcr.io/joekky/provider-proxmox:latest
