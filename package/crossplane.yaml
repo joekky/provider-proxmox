@@ -5,10 +5,18 @@
 #   name: provider-proxmox
 # spec:
 #   package: ghcr.io/joekky/provider-proxmox:latest
+# apiVersion: meta.pkg.crossplane.io/v1
+# kind: Provider
+# metadata:
+#   name: provider-proxmox
+# spec:
+#   controller:
+#     image: ghcr.io/joekky/provider-proxmox-controller:$GITHUB_SHA
+#
 apiVersion: meta.pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-proxmox
 spec:
   controller:
-    image: ghcr.io/joekky/provider-proxmox-controller:$GITHUB_SHA
+    image: ghcr.io/joekky/provider-proxmox-controller:latest

@@ -30,7 +30,7 @@ IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox
 
 img.build:
 	@echo "Building provider package..."
-	crossplane xpkg build --name $(IMAGE_NAME):$(GITHUB_SHA) --ignore=".github/**,.github/workflows/*" --verbose
+	crossplane xpkg build --name $(IMAGE_NAME):$(GITHUB_SHA) --ignore=".github/**,.github/workflows/*,.git/**/*" --verbose
 
 
 .PHONY: img.push
