@@ -26,9 +26,16 @@ jobs:
       - name: Build provider binary and generate CRDs
         run: |
           make build
+          echo "Generating CRDs..."
           make manifests
-          echo "CRD generation completed"
-          ls -l package/crds/
+          echo "CRD generation completed. Contents of package/crds/:"
+          ls -la package/crds/
+          if [ -f package/crds/proxmox.crossplane.io_containers.yaml ]; then
+            echo "Content of proxmox.crossplane.io_containers.yaml:"
+            cat package/crds/proxmox.crossplane.io_containers.yaml
+          else
+            echo "proxmox.crossplane.io_containers.yaml not found!"
+          fi
         # run: make build
       - name: Check CRD content
         run: |
