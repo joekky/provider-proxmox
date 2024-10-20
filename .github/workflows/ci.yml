@@ -10,7 +10,7 @@ on:
 env:
   PACKAGE_NAME: provider-proxmox
   PACKAGE_ROOT: github.com/joekky/provider-proxmox
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/provider-proxmox
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/provider-proxmox
 
 jobs:
   build-and-push:
