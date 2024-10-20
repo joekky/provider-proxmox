@@ -30,11 +30,11 @@ IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox
 
 img.build:
 	@echo "Building provider package..."
-	crossplane build provider
+	crossplane xpkg build --name $(IMAGE_NAME):$(GITHUB_SHA)
 
 .PHONY: img.push
 
 img.push:
 	@echo "Pushing provider package..."
-	crossplane push provider $(IMAGE_NAME):$(GITHUB_SHA)
+	crossplane xpkg push $(IMAGE_NAME):$(GITHUB_SHA)
 
