@@ -1,10 +1,11 @@
-IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox
+IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox/provider-proxmox
 
 img.build:
 	@echo "Building Docker image $(IMAGE_NAME)..."
 	docker buildx build --platform linux/amd64 \
 		-t $(IMAGE_NAME):latest \
 		--load \
+		-f cluster/images/provider-proxmox/Dockerfile \
 		.
 
 img.push:
