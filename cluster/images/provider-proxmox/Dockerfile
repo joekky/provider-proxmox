@@ -1,9 +1,22 @@
-FROM gcr.io/distroless/static@sha256:41972110a1c1a5c0b6adb283e8aa092c43c31f7c5d79b8656fbffff2c3e61f05
+# Use a minimal base image
+FROM gcr.io/distroless/static:nonroot
 
+# Set build arguments for multi-arch support
 ARG TARGETOS
 ARG TARGETARCH
 
-ADD bin/$TARGETOS\_$TARGETARCH/provider /usr/local/bin/crossplane-proxmox-provider
+# Copy the provider binary into the image
+ADD bin/$TARGETOS\_$TARGETARCH/provider /usr/local/bin/provider
 
-USER 65532
-ENTRYPOINT ["crossplane-proxmox-provider"]
+# Copy crossplane.yaml and crds/ into the image root
+COPY package/crossplane.yaml /crossplane.yaml
+COPY package/crds /crds
+
+# Ensure the provider binary is executable
+RUN chmod +x /usr/local/bin/provider
+
+# Set the user to non-root for security
+USER 65532:65532
+
+# Set the entrypoint to the provider binary
+ENTRYPOINT ["/usr/local/bin/provider"]
