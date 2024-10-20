@@ -29,7 +29,7 @@ WORKDIR /
 COPY --from=builder /workspace/provider /provider
 
 # Copy Crossplane package metadata and CRDs
-COPY package/crossplane.yaml .
+COPY --chmod=644 package/crossplane.yaml .
 COPY package/crds/ crds/
 
 # Set the entrypoint to the provider binary
