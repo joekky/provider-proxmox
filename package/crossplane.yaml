@@ -11,4 +11,4 @@ metadata:
   name: provider-proxmox
 spec:
   controller:
-    image: ghcr.io/joekky/provider-proxmox-controller:latest
+    image: ghcr.io/joekky/provider-proxmox-controller:$GITHUB_SHA
