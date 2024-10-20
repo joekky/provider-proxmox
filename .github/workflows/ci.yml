@@ -11,7 +11,9 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/joekky/provider-proxmox
-  GO_VERSION: "1.18" # Adjust this to your Go version
+  GO_VERSION: "1.21"
+  GOLANGCI_VERSION: "v1.56.2"
+  DOCKER_BUILDX_VERSION: "v0.8.2"
 
 jobs:
   build-and-push:
