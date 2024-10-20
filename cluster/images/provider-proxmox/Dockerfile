@@ -1,20 +1,29 @@
-FROM gcr.io/distroless/static:nonroot
+# Use a specific version of Alpine as the base image for reproducibility
+FROM alpine:3.18 AS base
 
-ARG TARGETOS
-ARG TARGETARCH
+# Set environment variables (optional but recommended)
+ENV PROVIDER_PATH=/usr/local/bin/provider \
+  CONFIG_PATH=/crossplane.yaml \
+  CRDS_PATH=/crds
 
-# Copy the provider binary into the image
-ADD bin/$TARGETOS\_$TARGETARCH/provider /usr/local/bin/provider
+# Create a non-root user and group for running the application
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy crossplane.yaml and crds/ into the image root
-COPY package/crossplane.yaml /crossplane.yaml
-COPY package/crds /crds
+# Copy the provider binary with executable permissions
+COPY --chmod=0755 bin/linux_amd64/provider $PROVIDER_PATH
 
-# Ensure the provider binary is executable
-RUN chmod +x /usr/local/bin/provider
+# Copy other necessary configuration files and CRDs
+COPY package/crossplane.yaml $CONFIG_PATH
+COPY package/crds $CRDS_PATH
 
-# Set the user to non-root for security
-USER 65532:65532
+# Change ownership of the files to the non-root user
+RUN chown -R appuser:appgroup $PROVIDER_PATH $CONFIG_PATH $CRDS_PATH
 
-# Set the entrypoint to the provider binary
-ENTRYPOINT ["/usr/local/bin/provider"]
+# Switch to the non-root user
+USER appuser
+
+# Define the entrypoint (adjust if necessary)
+ENTRYPOINT ["provider"]
+
+# (Optional) Define a default command
+CMD ["--help"]
