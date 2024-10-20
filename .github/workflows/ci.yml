@@ -29,15 +29,12 @@ jobs:
           go-version: "1.21"
 
       - name: Build provider
-        run: |
-          make build
-          mkdir -p package/bin
-          cp bin/provider package/bin/
+        run: make build
 
       - name: Package CRDs and metadata
         run: |
           mkdir -p package/crds
-          cp -R package/crds/* package/crds/
+          cp -R package/crds/* package/crds/ || true
           cat <<EOF > package/crossplane.yaml
           apiVersion: meta.pkg.crossplane.io/v1
           kind: Provider
@@ -69,10 +66,11 @@ jobs:
             --tag ${{ env.IMAGE_NAME }}:${{ github.sha }} \
             --file - \
             --push=${{ env.PUSH }} \
-            package/ <<EOF
+            . <<EOF
           FROM scratch
-          COPY . /
-          CMD ["/bin/provider"]
+          COPY package /
+          COPY bin/provider /
+          CMD ["/provider"]
           EOF
 
       - name: Create artifact

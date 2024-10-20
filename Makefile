@@ -1,7 +1,7 @@
 # ====================================================================================
 # Setup Project
 PROJECT_NAME := provider-proxmox
-PROJECT_REPO := github.com/crossplane/$(PROJECT_NAME)
+PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 
 PLATFORMS ?= linux_amd64 linux_arm64
 -include build/makelib/common.mk
@@ -20,51 +20,43 @@ TOOLS_HOST_DIR ?= $(HOME)/.crossplane-tools
 CONTROLLER_GEN := $(TOOLS_HOST_DIR)/controller-gen
 
 # ====================================================================================
-# Tool Installation
-
-.PHONY: controller-gen
-controller-gen: ## Download controller-gen locally if necessary.
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0)
-	@$(CONTROLLER_GEN) --version
-
-
-define go-get-tool
-@[ -f $(1) ] || { \
-    set -e ;\
-    echo "Downloading $(2)" ;\
-    GOBIN=$(TOOLS_HOST_DIR) go install $(2) ;\
-    echo "Installing $(2) to $(1)" ;\
-}
-endef
-# define go-get-tool
-# @[ -f $(1) ] || { \
-# 	set -e ;\
-# 	echo "Downloading $(2)" ;\
-# 	GOBIN=$(TOOLS_HOST_DIR) go install $(2) ;\
-# 	echo "Installing $(2) to $(1)" ;\
-# }
-# endef
-
-# ====================================================================================
-# Code Generation
-.PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	@echo "Cleaning old deepcopy files"
-	@find . -name "zz_generated.deepcopy.go" -delete
-	@echo "Generating deepcopy code"
-	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..." || (echo "Error generating deepcopy code"; exit 1)
-	@echo "Deepcopy code generation complete"
-
-.PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinitions
-	@$(CONTROLLER_GEN) rbac:roleName=controller-perms crd:trivialVersions=true paths="./..." output:crd:artifacts:config=config/crd/bases
-
-# ====================================================================================
 # Targets
 
+.PHONY: build
+build: generate
+	@echo "Building provider binary..."
+	@mkdir -p bin
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/provider cmd/provider/main.go
+
+.PHONY: generate
+generate: controller-gen
+	@echo "Generating DeepCopy functions..."
+	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+.PHONY: manifests
+manifests: controller-gen
+	@echo "Generating CRDs..."
+	@$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=package/crds
+
 .PHONY: all
-all: generate manifests
+all: build generate manifests
+
+.PHONY: controller-gen
+controller-gen:
+	@if [ ! -f $(CONTROLLER_GEN) ]; then \
+		echo "Installing controller-gen..."; \
+		mkdir -p $(TOOLS_HOST_DIR); \
+		GOBIN=$(TOOLS_HOST_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.14.0; \
+	fi
+
+# ====================================================================================
+# Special Targets
 
 .PHONY: help
-help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+help:
+	@echo "Available targets:"
+	@echo "  build       - Build the provider binary"
+	@echo "  generate    - Generate DeepCopy functions"
+	@echo "  manifests   - Generate CRDs"
+	@echo "  all         - Run build, generate, and manifests"
+	@echo "  help        - Show this help message"
