@@ -18,4 +18,3 @@ USER 65532:65532
 
 # Set the entrypoint to the provider binary
 ENTRYPOINT ["/usr/local/bin/provider"]
-

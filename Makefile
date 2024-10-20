@@ -24,9 +24,10 @@ CONTROLLER_GEN := $(TOOLS_HOST_DIR)/controller-gen
 
 .PHONY: build
 build: generate
-	@echo "Building provider binary..."
-	@mkdir -p bin
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/provider cmd/provider/main.go
+	@echo "Building provider binary for multiple architectures..."
+	@mkdir -p bin/linux_amd64 bin/linux_arm64
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/linux_amd64/provider cmd/provider/main.go
+	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o bin/linux_arm64/provider cmd/provider/main.go
 
 .PHONY: generate
 generate: controller-gen
