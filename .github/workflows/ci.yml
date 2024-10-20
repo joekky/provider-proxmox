@@ -62,7 +62,7 @@ jobs:
 
       - name: Build provider package
         run: |
-          crossplane xpkg build -o provider-proxmox.xpkg
+          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml"
 
       - name: Push provider package
         run: |
