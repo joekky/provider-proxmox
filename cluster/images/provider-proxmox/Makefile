@@ -1,4 +1,4 @@
-IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox/provider-proxmox
+IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox
 
 img.build:
 	@echo "Building Docker image $(IMAGE_NAME)..."
