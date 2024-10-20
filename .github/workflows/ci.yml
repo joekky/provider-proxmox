@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Crossplane CLI
         run: |
-          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | bash
+          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
           mkdir -p $HOME/.local/bin
           mv crossplane $HOME/.local/bin/
           echo "$HOME/.local/bin" >> $GITHUB_PATH
@@ -49,8 +49,8 @@ jobs:
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
-          kubectl crossplane build provider
-          kubectl crossplane push provider $IMAGE_NAME:$GITHUB_SHA
+          crossplane build provider
+          crossplane push provider $IMAGE_NAME:$GITHUB_SHA
 
       - name: Logout from GitHub Container Registry
         if: always()
