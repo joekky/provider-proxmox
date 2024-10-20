@@ -8,6 +8,10 @@ img.build:
 		-f $(CURDIR)/Dockerfile \
 		$(CURDIR)/../../..
 
+img.push:
+	@echo "Pushing Docker image $(IMAGE_NAME):latest..."
+	docker push $(IMAGE_NAME):latest
+
 package:
 	@echo "Building OCI package..."
 	crossplane package build \
@@ -19,4 +23,4 @@ img.package:
 	make img.build
 	make package
 
-.PHONY: img.build package img.package
+.PHONY: img.build img.push package img.package

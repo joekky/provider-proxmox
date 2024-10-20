@@ -50,7 +50,9 @@ jobs:
         run: |
           make -C cluster/images/provider-proxmox img.build
           make -C cluster/images/provider-proxmox img.push
-          make -C cluster/images/provider-proxmox package
+
+      - name: Build OCI package
+        run: make -C cluster/images/provider-proxmox package
 
       - name: Push OCI package to GHCR
         run: |
