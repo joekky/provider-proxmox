@@ -33,7 +33,6 @@ type VirtualMachineStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:scope=Cluster,categories={crossplane,managed,proxmox}
 
 // VirtualMachine is the Schema for the virtualmachines API
 type VirtualMachine struct {

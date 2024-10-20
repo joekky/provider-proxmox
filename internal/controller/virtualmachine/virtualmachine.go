@@ -2,6 +2,7 @@ package virtualmachine
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pkg/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,28 +38,56 @@ type connector struct {
 }
 
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	// Implement connection logic here
-	return nil, errors.New("not implemented")
+	cr, ok := mg.(*v1alpha1.VirtualMachine)
+	if !ok {
+		return nil, errors.New("not a VirtualMachine resource")
+	}
+
+	return &external{kube: c.kube}, nil
 }
 
-type external struct{}
+type external struct {
+	kube client.Client
+}
 
 func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	// Implement observation logic here
-	return managed.ExternalObservation{}, errors.New("not implemented")
+	vm, ok := mg.(*v1alpha1.VirtualMachine)
+	if !ok {
+		return managed.ExternalObservation{}, errors.New("not a VirtualMachine resource")
+	}
+
+	fmt.Printf("Observing VM: %s\n", vm.Name)
+	return managed.ExternalObservation{
+		ResourceExists: false,
+	}, nil
 }
 
 func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
-	// Implement creation logic here
-	return managed.ExternalCreation{}, errors.New("not implemented")
+	vm, ok := mg.(*v1alpha1.VirtualMachine)
+	if !ok {
+		return managed.ExternalCreation{}, errors.New("not a VirtualMachine resource")
+	}
+
+	fmt.Printf("Creating VM: %s\n", vm.Name)
+	return managed.ExternalCreation{}, nil
 }
 
 func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	// Implement update logic here
-	return managed.ExternalUpdate{}, errors.New("not implemented")
+	vm, ok := mg.(*v1alpha1.VirtualMachine)
+	if !ok {
+		return managed.ExternalUpdate{}, errors.New("not a VirtualMachine resource")
+	}
+
+	fmt.Printf("Updating VM: %s\n", vm.Name)
+	return managed.ExternalUpdate{}, nil
 }
 
 func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
-	// Implement deletion logic here
-	return errors.New("not implemented")
+	vm, ok := mg.(*v1alpha1.VirtualMachine)
+	if !ok {
+		return errors.New("not a VirtualMachine resource")
+	}
+
+	fmt.Printf("Deleting VM: %s\n", vm.Name)
+	return nil
 }
