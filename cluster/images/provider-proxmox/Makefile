@@ -5,8 +5,8 @@ img.build:
 	docker buildx build --platform linux/amd64 \
 		-t $(IMAGE_NAME):latest \
 		--load \
-		-f cluster/images/provider-proxmox/Dockerfile \
-		.
+		-f $(CURDIR)/Dockerfile \
+		$(CURDIR)/../../..
 
 img.push:
 	@echo "Pushing Docker image $(IMAGE_NAME)..."
