@@ -1,6 +1,13 @@
-apiVersion: meta.pkg.crossplane.io/v1alpha1
+apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-proxmox
 spec:
   package: ghcr.io/joekky/provider-proxmox:latest
+#
+# apiVersion: meta.pkg.crossplane.io/v1alpha1
+# kind: Provider
+# metadata:
+#   name: provider-proxmox
+# spec:
+#   package: ghcr.io/joekky/provider-proxmox:latest
