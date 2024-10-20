@@ -23,7 +23,7 @@ CONTROLLER_GEN := $(TOOLS_HOST_DIR)/controller-gen
 # Targets
 
 .PHONY: build
-build: generate
+build: generate manifests build.xpkg
 	@echo "Building provider binary for multiple architectures..."
 	@mkdir -p bin/linux_amd64 bin/linux_arm64
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/linux_amd64/provider cmd/provider/main.go
@@ -61,3 +61,26 @@ help:
 	@echo "  manifests   - Generate CRDs"
 	@echo "  all         - Run build, generate, and manifests"
 	@echo "  help        - Show this help message"
+
+.PHONY: build.xpkg
+build.xpkg: build
+	@$(INFO) Building package $(PROJECT_NAME)
+	@mkdir -p $(OUTPUT_DIR)/package
+	@cp -r package/* $(OUTPUT_DIR)/package
+	@cd $(OUTPUT_DIR) && $(XPKG) build -d $(OUTPUT_DIR)/package --ignore ".github/" --ignore "examples/" -o $(PROJECT_NAME).xpkg
+
+XPKG := $(shell which crossplane-xpkg 2>/dev/null)
+
+.PHONY: images
+images: build
+	@$(INFO) Building provider image for $(PLATFORM)
+	@$(MAKE) build.images.$(subst /,_,$(PLATFORM))
+
+.PHONY: build.images.%
+build.images.%:
+	@$(INFO) Building provider image for $(PLATFORM)
+	@docker buildx build $(BUILD_ARGS) \
+		--platform $(PLATFORM) \
+		-t $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH):$(VERSION) \
+		-f $(PROJECT_ROOT)/Dockerfile \
+		$(PROJECT_ROOT)
