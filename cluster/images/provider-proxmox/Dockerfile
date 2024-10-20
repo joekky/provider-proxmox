@@ -1,7 +1,5 @@
-# Use a minimal base image
 FROM gcr.io/distroless/static:nonroot
 
-# Set build arguments for multi-arch support
 ARG TARGETOS
 ARG TARGETARCH
 
@@ -9,8 +7,8 @@ ARG TARGETARCH
 ADD bin/$TARGETOS\_$TARGETARCH/provider /usr/local/bin/provider
 
 # Copy crossplane.yaml and crds/ into the image root
-COPY package/crossplane.yaml /crossplane.yaml
-COPY package/crds /crds
+COPY ../../../../package/crossplane.yaml /crossplane.yaml
+COPY ../../../../package/crds /crds
 
 # Ensure the provider binary is executable
 RUN chmod +x /usr/local/bin/provider
