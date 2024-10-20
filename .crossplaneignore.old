@@ -1,0 +1,20 @@
+# Ignore GitHub Actions workflows
+.github/**
+# Ignore GitHub workflows and CI-related files
+.github/**
+.travis.yml
+.circleci/**
+
+# Ignore linting and build tools configs
+.golangci.yml
+Makefile
+Dockerfile
+.go
+*.go
+*.md
+vendor/**
+
+# Ignore other non-CRD YAMLs
+**/ci.yml
+**/test.yaml
+
