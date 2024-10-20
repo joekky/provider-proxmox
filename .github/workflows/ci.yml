@@ -10,7 +10,7 @@ on:
 env:
   PACKAGE_NAME: provider-proxmox
   PACKAGE_ROOT: github.com/joekky/provider-proxmox
-  IMAGE_NAME: ghcr.io/${{ github.repository }}/provider-proxmox
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/provider-proxmox
 
 jobs:
   build-and-push:
@@ -41,10 +41,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push provider image
+      - name: Install Crossplane CLI
         run: |
-          make -C cluster/images/provider-proxmox img.build
-          make -C cluster/images/provider-proxmox img.push
+          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
+          export PATH=$PATH:$HOME/.local/bin
+
+      - name: Build and package Docker image
+        run: make -C cluster/images/provider-proxmox img.package
+
+      - name: Push OCI package to GHCR
+        run: |
+          crossplane package push provider-proxmox.tar.gz --tag ghcr.io/joekky/provider-proxmox:latest
 
       - name: Logout from GitHub Container Registry
         if: always()
