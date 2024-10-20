@@ -44,10 +44,13 @@ jobs:
       - name: Install Crossplane CLI
         run: |
           curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
-          export PATH=$PATH:$HOME/.local/bin
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Build and package Docker image
-        run: make -C cluster/images/provider-proxmox img.package
+      - name: Build and push provider image
+        run: |
+          make -C cluster/images/provider-proxmox img.build
+          make -C cluster/images/provider-proxmox img.push
+          make -C cluster/images/provider-proxmox package
 
       - name: Push OCI package to GHCR
         run: |
