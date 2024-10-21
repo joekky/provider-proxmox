@@ -36,7 +36,6 @@ jobs:
           else
             echo "proxmox.crossplane.io_containers.yaml not found!"
           fi
-        # run: make build
       - name: Check CRD content
         run: |
           echo "Content of proxmox.crossplane.io_containers.yaml:"
@@ -53,6 +52,9 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/amd64 \
+            --build-arg TARGETOS=linux \
+            --build-arg TARGETARCH=amd64 \
+            -t ${{ env.CONTROLLER_IMAGE }}:latest \
             -t ${{ env.CONTROLLER_IMAGE }}:${{ github.sha }} \
             --push \
             -f cluster/images/provider-proxmox/Dockerfile \
@@ -61,15 +63,12 @@ jobs:
         run: |
           curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
           sudo mv crossplane /usr/local/bin/
-      - name: Update crossplane.yaml with controller image
-        run: |
-          sed -i "s|image:.*|image: ${{ env.CONTROLLER_IMAGE }}:${{ github.sha }}|g" package/crossplane.yaml
       - name: Build provider package
         run: |
           crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --verbose
       - name: Push provider package
         run: |
-          crossplane xpkg push ${{ env.IMAGE_NAME }}:${{ github.sha }} -f provider-proxmox.xpkg
+          crossplane xpkg push ${{ env.IMAGE_NAME }}:latest -f provider-proxmox.xpkg
       - name: Logout from GitHub Container Registry
         if: always()
         run: docker logout ghcr.io
