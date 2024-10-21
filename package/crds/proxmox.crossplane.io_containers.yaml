@@ -4,20 +4,24 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.14.0
-  name: virtualmachines.proxmox.crossplane.io
+  name: containers.proxmox.crossplane.io
 spec:
   group: proxmox.crossplane.io
   names:
-    kind: VirtualMachine
-    listKind: VirtualMachineList
-    plural: virtualmachines
-    singular: virtualmachine
-  scope: Namespaced
+    categories:
+    - crossplane
+    - managed
+    - proxmox
+    kind: Container
+    listKind: ContainerList
+    plural: containers
+    singular: container
+  scope: Cluster
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: VirtualMachine is the Schema for the virtualmachines API
+        description: Container is the Schema for the containers API
         properties:
           apiVersion:
             description: |-
@@ -37,7 +41,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: VirtualMachineSpec defines the desired state of a VirtualMachine.
+            description: ContainerSpec defines the desired state of Container
             properties:
               deletionPolicy:
                 default: Delete
@@ -54,22 +58,27 @@ spec:
                 - Delete
                 type: string
               forProvider:
-                description: VirtualMachineParameters defines the desired state of
-                  VirtualMachine
+                description: ContainerParameters define the desired state of a Proxmox
+                  Container
                 properties:
-                  cpu:
+                  cores:
                     type: integer
+                  hostname:
+                    type: string
                   memory:
                     type: integer
-                  name:
-                    type: string
                   node:
                     type: string
+                  osTemplate:
+                    type: string
+                  swap:
+                    type: integer
                 required:
-                - cpu
+                - cores
+                - hostname
                 - memory
-                - name
                 - node
+                - osTemplate
                 type: object
               managementPolicies:
                 default:
@@ -239,13 +248,15 @@ spec:
             - forProvider
             type: object
           status:
-            description: VirtualMachineStatus represents the observed state of a VirtualMachine.
+            description: ContainerStatus defines the observed state of Container
             properties:
               atProvider:
-                description: VirtualMachineObservation defines the observed state
-                  of VirtualMachine
+                description: ContainerObservation defines the observed state of a
+                  Proxmox Container
                 properties:
                   id:
+                    type: string
+                  status:
                     type: string
                 type: object
               conditions:

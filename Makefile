@@ -23,7 +23,7 @@ CONTROLLER_GEN := $(TOOLS_HOST_DIR)/controller-gen
 # Targets
 
 .PHONY: build
-build: generate manifests build.xpkg
+build: generate manifests
 	@echo "Building provider binary for multiple architectures..."
 	@mkdir -p bin/linux_amd64 bin/linux_arm64
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/linux_amd64/provider cmd/provider/main.go
@@ -40,7 +40,7 @@ manifests: controller-gen
 	@$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=package/crds
 
 .PHONY: all
-all: build generate manifests
+all: build build.xpkg
 
 .PHONY: controller-gen
 controller-gen:
@@ -59,11 +59,11 @@ help:
 	@echo "  build       - Build the provider binary"
 	@echo "  generate    - Generate DeepCopy functions"
 	@echo "  manifests   - Generate CRDs"
-	@echo "  all         - Run build, generate, and manifests"
+	@echo "  all         - Run build and build.xpkg"
 	@echo "  help        - Show this help message"
 
 .PHONY: build.xpkg
-build.xpkg: build
+build.xpkg:
 	@$(INFO) Building package $(PROJECT_NAME)
 	@mkdir -p $(OUTPUT_DIR)/package
 	@cp -r package/* $(OUTPUT_DIR)/package
@@ -84,3 +84,6 @@ build.images.%:
 		-t $(BUILD_REGISTRY)/$(PROJECT_NAME)-$(ARCH):$(VERSION) \
 		-f $(PROJECT_ROOT)/Dockerfile \
 		$(PROJECT_ROOT)
+
+.PHONY: build.all
+build.all: build build.xpkg
