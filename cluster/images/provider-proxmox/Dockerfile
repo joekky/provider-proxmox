@@ -7,7 +7,7 @@ ARG TARGETARCH
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 # Copy the provider binary
-COPY --chmod=0755 bin/$TARGETOS_$TARGETARCH/provider /usr/local/bin/provider
+COPY --chmod=0755 bin/provider /usr/local/bin/provider
 
 # Change ownership of the binary
 RUN chown -R appuser:appgroup /usr/local/bin/provider

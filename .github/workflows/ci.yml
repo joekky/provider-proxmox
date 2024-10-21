@@ -36,10 +36,6 @@ jobs:
           else
             echo "proxmox.crossplane.io_containers.yaml not found!"
           fi
-      - name: Check CRD content
-        run: |
-          echo "Content of proxmox.crossplane.io_containers.yaml:"
-          cat /home/runner/work/provider-proxmox/provider-proxmox/package/crds/proxmox.crossplane.io_containers.yaml
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Login to GitHub Container Registry
