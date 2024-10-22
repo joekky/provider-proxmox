@@ -2,6 +2,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*'] # This is to ensure that the workflow is triggered for tags like v0.1.0
   pull_request:
     branches: [main]
   workflow_dispatch: {}
@@ -44,27 +45,52 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.CONTROLLER_IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
       - name: Build and push controller image
-        run: |
-          docker buildx build \
-            --platform linux/amd64 \
-            --build-arg TARGETOS=linux \
-            --build-arg TARGETARCH=amd64 \
-            -t ${{ env.CONTROLLER_IMAGE }}:latest \
-            -t ${{ env.CONTROLLER_IMAGE }}:${{ github.sha }} \
-            --push \
-            -f cluster/images/provider-proxmox/Dockerfile \
-            .
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: cluster/images/provider-proxmox/Dockerfile
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            TARGETOS=linux
+            TARGETARCH=amd64
       - name: Install Crossplane CLI
         run: |
           curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
           sudo mv crossplane /usr/local/bin/
       - name: Build provider package
         run: |
-          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --verbose
+          VERSION=${GITHUB_REF#refs/tags/}
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root . --version ${VERSION}
+          else
+            crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root .
+          fi
       - name: Push provider package
+        if: github.event_name != 'pull_request'
         run: |
-          crossplane xpkg push ${{ env.IMAGE_NAME }}:latest -f provider-proxmox.xpkg
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            crossplane xpkg push ${{ env.IMAGE_NAME }}:${VERSION} -f provider-proxmox.xpkg
+          fi
+          if [[ $GITHUB_REF == refs/heads/main ]]; then
+            crossplane xpkg push ${{ env.IMAGE_NAME }}:latest -f provider-proxmox.xpkg
+          fi
       - name: Logout from GitHub Container Registry
         if: always()
         run: docker logout ghcr.io
