@@ -75,12 +75,22 @@ jobs:
           sudo mv crossplane /usr/local/bin/
       - name: Build provider package
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root . --version ${VERSION}
+            VERSION=${GITHUB_REF#refs/tags/}
+            # Set environment variables for substitution
+            echo "REGISTRY_IMAGE=${CONTROLLER_IMAGE}" >> $GITHUB_ENV
+            echo "VERSION=${VERSION}" >> $GITHUB_ENV
+            # Use envsubst to replace variables in crossplane.yaml
+            envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
+            mv package/crossplane.yaml.tmp package/crossplane.yaml
           else
-            crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root .
+            # For non-tag builds, use a default version
+            echo "REGISTRY_IMAGE=${CONTROLLER_IMAGE}" >> $GITHUB_ENV
+            echo "VERSION=latest" >> $GITHUB_ENV
+            envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
+            mv package/crossplane.yaml.tmp package/crossplane.yaml
           fi
+          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root .
       - name: Push provider package
         if: github.event_name != 'pull_request'
         run: |
@@ -93,4 +103,4 @@ jobs:
           fi
       - name: Logout from GitHub Container Registry
         if: always()
-        run: docker logout ghcr.io
+        run: docker logout ghcr.io # test
