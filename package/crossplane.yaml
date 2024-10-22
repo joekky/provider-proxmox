@@ -4,7 +4,7 @@ metadata:
   name: provider-proxmox
 spec:
   controller:
-    image: ghcr.io/joekky/provider-proxmox:latest
+    image: ${REGISTRY_IMAGE}:${VERSION} ## version 0.1.1 test
 
 
 
