@@ -4,7 +4,21 @@ metadata:
   name: provider-proxmox
 spec:
   controller:
-    image: ${REGISTRY_IMAGE}:${VERSION} ## version 0.1.1 test
+    image: ${REGISTRY_IMAGE}:${VERSION}
+    args:
+      - --debug
+    env:
+      - name: POD_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+    resources:
+      limits:
+        cpu: 100m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
 
 
 
