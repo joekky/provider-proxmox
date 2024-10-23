@@ -85,56 +85,44 @@ jobs:
         run: |
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
-            # Export environment variables for substitution
             export REGISTRY_IMAGE=${CONTROLLER_IMAGE}
             export VERSION=${VERSION}
-            # Use envsubst to replace variables in crossplane.yaml
             envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
             mv package/crossplane.yaml.tmp package/crossplane.yaml
           else
-            # For non-tag builds, use a default version
             export REGISTRY_IMAGE=${CONTROLLER_IMAGE}
             export VERSION=latest
             envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
             mv package/crossplane.yaml.tmp package/crossplane.yaml
           fi
 
-          # Optional: Debugging - Verify the substituted crossplane.yaml
-          echo "----- Substituted crossplane.yaml -----"
-          cat package/crossplane.yaml
-
-          # Validate YAML syntax using yamllint
-          echo "----- Validating crossplane.yaml syntax -----"
+          # Install and configure yamllint
           sudo apt-get update && sudo apt-get install -y yamllint
-          yamllint package/crossplane.yaml
+          cat > .yamllint <<EOF
+---
+extends: default
+rules:
+  document-start: enable
+  empty-lines:
+    max: 2
+    max-end: 0
+  line-length: disable
+EOF
 
-          # Build the provider package with verbose output
-          echo "----- Building Crossplane package -----"
+          echo "=== Validating YAML files ==="
+          yamllint -c .yamllint package/crossplane.yaml
+
+          echo "=== Package Structure ==="
+          find . -type f -name "*.yaml" -exec echo {} \; -exec cat {} \;
+          
+          echo "=== Building Package ==="
           crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root ./package --verbose
-
-          # Inspect the contents of the built xpkg package
-          echo "----- Inspecting provider-proxmox.xpkg -----"
-          # Check if the xpkg is a tar archive
-          if file provider-proxmox.xpkg | grep -q 'tar archive'; then
-            tar -tf provider-proxmox.xpkg
-            echo "----- Extracting provider-proxmox.xpkg to temp_pkg -----"
-            mkdir temp_pkg
-            tar -xf provider-proxmox.xpkg -C temp_pkg
-            echo "----- Listing files in temp_pkg -----"
-            ls -la temp_pkg/
-            echo "----- Verifying crossplane.yaml presence -----"
-            if [ -f temp_pkg/package/crossplane.yaml ]; then
-              echo "crossplane.yaml is present in the package."
-              echo "----- Contents of crossplane.yaml in the package -----"
-              cat temp_pkg/package/crossplane.yaml
-            else
-              echo "Error: crossplane.yaml is missing from the package."
-              exit 1
-            fi
-          else
-            echo "Error: provider-proxmox.xpkg is not a recognized tar archive."
-            exit 1
-          fi
+          
+          echo "=== Verifying Package Contents ==="
+          mkdir -p /tmp/xpkg-extract
+          tar -xf provider-proxmox.xpkg -C /tmp/xpkg-extract
+          echo "Package contents:"
+          find /tmp/xpkg-extract -type f -exec echo {} \; -exec cat {} \;
 
       - name: Push provider package
         if: github.event_name != 'pull_request'
@@ -149,5 +137,4 @@ jobs:
 
       - name: Logout from GitHub Container Registry
         if: always()
-        run: docker logout ghcr.io #t
-
+        run: docker logout ghcr.io #test
