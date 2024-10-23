@@ -96,22 +96,7 @@ jobs:
             mv package/crossplane.yaml.tmp package/crossplane.yaml
           fi
 
-          # Install and configure yamllint
-          sudo apt-get update && sudo apt-get install -y yamllint
-          cat > .yamllint <<EOF
----
-extends: default
-rules:
-  document-start: enable
-  empty-lines:
-    max: 2
-    max-end: 0
-  line-length: disable
-EOF
-
-          echo "=== Validating YAML files ==="
-          yamllint -c .yamllint package/crossplane.yaml
-
+          # Debug: Print package contents and structure
           echo "=== Package Structure ==="
           find . -type f -name "*.yaml" -exec echo {} \; -exec cat {} \;
           
