@@ -102,7 +102,7 @@ jobs:
           echo "Substituted crossplane.yaml:"
           cat package/crossplane.yaml
           # Build the provider package
-          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root .
+          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root ./package
 
       - name: Push provider package
         if: github.event_name != 'pull_request'
@@ -117,4 +117,4 @@ jobs:
 
       - name: Logout from GitHub Container Registry
         if: always()
-        run: docker logout ghcr.io 
+        run: docker logout ghcr.io #test
