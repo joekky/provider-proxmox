@@ -28,34 +28,16 @@ jobs:
         with:
           go-version: "1.21"
 
-      # Single build and verify step
-      - name: Build provider binary and verify
+      - name: Build and verify provider binary
         run: |
-          # Build the binary
           make build
-          
-          # Verify binary was created and is executable
           echo "=== Binary Verification ==="
-          find . -name "provider" -type f -exec ls -la {} \;
-          find . -name "provider" -type f -exec file {} \;
-          find . -name "provider" -type f -exec du -h {} \;
-          
-          # Ensure binary is in correct location
-          if [ ! -f "bin/linux_amd64/provider" ]; then
-            echo "Error: Provider binary not found in expected location"
-            exit 1
-          fi
-          
-          # Generate CRDs
-          make manifests
-          echo "=== CRD Verification ==="
-          ls -la package/crds/
-          if [ -f package/crds/proxmox.crossplane.io_containers.yaml ]; then
-            echo "Content of proxmox.crossplane.io_containers.yaml:"
-            cat package/crds/proxmox.crossplane.io_containers.yaml
-          else
-            echo "proxmox.crossplane.io_containers.yaml not found!"
-          fi
+          ls -la bin/linux_amd64/provider
+          file bin/linux_amd64/provider
+          echo "Binary size: $(du -h bin/linux_amd64/provider | cut -f1)"
+
+      - name: Generate CRDs
+        run: make manifests
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -66,16 +48,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Verify Docker context before build
-      - name: Verify Docker build context
-        run: |
-          echo "=== Docker Build Context ==="
-          ls -la
-          echo "=== Binary Location ==="
-          ls -la bin/linux_amd64/
-          echo "=== Dockerfile Location ==="
-          ls -la cluster/images/provider-proxmox/
 
       - name: Docker meta
         id: meta
@@ -90,7 +62,6 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
-      # Single Docker build step
       - name: Build and push controller image
         uses: docker/build-push-action@v4
         with:
@@ -103,19 +74,8 @@ jobs:
           build-args: |
             TARGETOS=linux
             TARGETARCH=amd64
+          # Enable debug output
           no-cache: true
-          outputs: type=docker,dest=/tmp/image.tar
-
-      # Image verification
-      - name: Verify built image
-        if: github.event_name != 'pull_request'
-        run: |
-          echo "=== Loading built image ==="
-          docker load < /tmp/image.tar
-          echo "=== Image details ==="
-          docker images | grep ${{ github.repository }}
-          echo "=== Image inspection ==="
-          docker inspect $(docker images -q | head -n 1)
 
       - name: Install Crossplane CLI
         run: |
@@ -131,20 +91,13 @@ jobs:
           fi
           export REGISTRY_IMAGE=${CONTROLLER_IMAGE}
           export VERSION=${VERSION}
+          
+          # Update crossplane.yaml with the current version
           envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
           mv package/crossplane.yaml.tmp package/crossplane.yaml
-
-          echo "=== Package Structure ==="
-          find . -type f -name "*.yaml" -exec echo {} \; -exec cat {} \;
           
-          echo "=== Building Package ==="
+          # Build the package
           crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root ./package --verbose
-          
-          echo "=== Verifying Package Contents ==="
-          mkdir -p /tmp/xpkg-extract
-          tar -xf provider-proxmox.xpkg -C /tmp/xpkg-extract
-          echo "Package contents:"
-          find /tmp/xpkg-extract -type f -exec echo {} \; -exec cat {} \;
 
       - name: Push provider package
         if: github.event_name != 'pull_request'
