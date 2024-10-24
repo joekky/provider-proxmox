@@ -1,3 +1,4 @@
+# Base image
 FROM alpine:3.18
 
 # Add necessary packages
@@ -19,15 +20,17 @@ COPY bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/provider
 # Set permissions and verify binary
 RUN chmod 755 /usr/local/bin/provider && \
     chown -R appuser:appgroup /usr/local/bin/provider && \
+    echo "Verifying provider binary:" && \
+    file /usr/local/bin/provider && \
     ls -l /usr/local/bin/provider && \
     echo "Binary size: $(du -h /usr/local/bin/provider | cut -f1)"
 
-# Expose the default Crossplane provider port
+# Expose the default Crossplane provider port (optional)
 EXPOSE 8080
 
 # Switch to non-root user
 USER ${USER_ID}
 
-# Set the entrypoint with debug flag
+# Set the entrypoint to the provider binary with debug flag
 ENTRYPOINT ["/usr/local/bin/provider"]
 CMD ["--debug"]
