@@ -1,36 +1,27 @@
 # Base image
 FROM alpine:3.18
 
-# Add necessary packages, including file utility
-RUN apk --no-cache add ca-certificates bash file
+# Add necessary packages
+RUN apk --no-cache add ca-certificates bash
 
 # Set build arguments
 ARG TARGETOS
 ARG TARGETARCH
 
-# Set environment variables
-ENV USER_ID=65532
-
 # Create a non-root user and group
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup -u ${USER_ID}
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup -u 65532
 
 # Copy the provider binary
 COPY bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/provider
 
-# Set permissions and verify binary
+# Set permissions
 RUN chmod 755 /usr/local/bin/provider && \
-    chown -R appuser:appgroup /usr/local/bin/provider && \
-    echo "Verifying provider binary:" && \
-    file /usr/local/bin/provider && \
-    ls -l /usr/local/bin/provider && \
-    echo "Binary size: $(du -h /usr/local/bin/provider | cut -f1)"
-
-# Expose the default Crossplane provider port (optional)
-EXPOSE 8080
+    chown -R appuser:appgroup /usr/local/bin/provider
 
 # Switch to non-root user
-USER ${USER_ID}
+USER 65532
 
-# Set the entrypoint to the provider binary with debug flag
+# Set the entrypoint and command
 ENTRYPOINT ["/usr/local/bin/provider"]
 CMD ["--debug"]
+# test

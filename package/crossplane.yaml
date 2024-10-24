@@ -6,6 +6,8 @@ metadata:
 spec:
   controller:
     image: ${REGISTRY_IMAGE}:${VERSION}
+    command:
+      - /usr/local/bin/provider
     args:
       - --debug
     env:
@@ -20,6 +22,6 @@ spec:
       requests:
         cpu: 100m
         memory: 256Mi
-# test
+
 
 
