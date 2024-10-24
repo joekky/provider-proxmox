@@ -1,8 +1,8 @@
 name: CI
-
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch: {}
@@ -46,6 +46,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Determine version
       - name: Set Version
         id: version
         run: |
@@ -55,6 +56,7 @@ jobs:
             echo "VERSION=latest" >> $GITHUB_ENV
           fi
 
+      # Direct Docker build without using xpkg
       - name: Build and push Docker image
         run: |
           echo "=== Building Docker image ==="
@@ -63,36 +65,36 @@ jobs:
             --build-arg TARGETARCH=amd64 \
             -t ${{ env.CONTROLLER_IMAGE }}:${{ env.VERSION }} \
             -f cluster/images/provider-proxmox/Dockerfile .
-
-          echo "=== Verifying Docker image ==="
+          
+          echo "=== Verifying image ==="
           docker images
-
+          
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            echo "=== Pushing Docker image ==="
+            echo "=== Pushing image ==="
             docker push ${{ env.CONTROLLER_IMAGE }}:${{ env.VERSION }}
           fi
 
-      - name: Install Crossplane CLI
-        run: |
-          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
-          sudo mv crossplane /usr/local/bin/
-      
+      # Build Crossplane package after Docker image is built
       - name: Build and push provider package
         if: github.event_name != 'pull_request'
         run: |
-          export REGISTRY_IMAGE=${{ env.CONTROLLER_IMAGE }}
-          export VERSION=${{ github.sha }}
+          # Install Crossplane CLI
+          curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
+          sudo mv crossplane /usr/local/bin/
           
           # Update crossplane.yaml
+          export VERSION=${{ env.VERSION }}
+          export REGISTRY_IMAGE=${{ env.CONTROLLER_IMAGE }}
           envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
           mv package/crossplane.yaml.tmp package/crossplane.yaml
           
-          # Build Crossplane package
-          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --verbose
+          # Build package
+          crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root ./package --verbose
           
-          # Push Crossplane package
-          crossplane xpkg push ${{ env.IMAGE_NAME }}:${{ env.VERSION }} -f provider-proxmox.xpkg
-          
+          # Push package
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            crossplane xpkg push ${{ env.IMAGE_NAME }}:${{ env.VERSION }} -f provider-proxmox.xpkg
+          fi
           if [[ $GITHUB_REF == refs/heads/main ]]; then
             crossplane xpkg push ${{ env.IMAGE_NAME }}:latest -f provider-proxmox.xpkg
           fi
