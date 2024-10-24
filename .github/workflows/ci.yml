@@ -2,15 +2,17 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*'] # Trigger workflow for tags like v0.1.0
+    tags: ['v*']
   pull_request:
     branches: [main]
   workflow_dispatch: {}
+
 env:
   PACKAGE_NAME: provider-proxmox
   PACKAGE_ROOT: github.com/joekky/provider-proxmox
   IMAGE_NAME: ghcr.io/${{ github.repository }}
   CONTROLLER_IMAGE: ghcr.io/${{ github.repository }}
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -26,12 +28,27 @@ jobs:
         with:
           go-version: "1.21"
 
-      - name: Build provider binary and generate CRDs
+      # Single build and verify step
+      - name: Build provider binary and verify
         run: |
+          # Build the binary
           make build
-          echo "Generating CRDs..."
+          
+          # Verify binary was created and is executable
+          echo "=== Binary Verification ==="
+          find . -name "provider" -type f -exec ls -la {} \;
+          find . -name "provider" -type f -exec file {} \;
+          find . -name "provider" -type f -exec du -h {} \;
+          
+          # Ensure binary is in correct location
+          if [ ! -f "bin/linux_amd64/provider" ]; then
+            echo "Error: Provider binary not found in expected location"
+            exit 1
+          fi
+          
+          # Generate CRDs
           make manifests
-          echo "CRD generation completed. Contents of package/crds/:"
+          echo "=== CRD Verification ==="
           ls -la package/crds/
           if [ -f package/crds/proxmox.crossplane.io_containers.yaml ]; then
             echo "Content of proxmox.crossplane.io_containers.yaml:"
@@ -50,6 +67,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Verify Docker context before build
+      - name: Verify Docker build context
+        run: |
+          echo "=== Docker Build Context ==="
+          ls -la
+          echo "=== Binary Location ==="
+          ls -la bin/linux_amd64/
+          echo "=== Dockerfile Location ==="
+          ls -la cluster/images/provider-proxmox/
+
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -63,6 +90,7 @@ jobs:
             type=sha,format=long
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'main') }}
 
+      # Single Docker build step
       - name: Build and push controller image
         uses: docker/build-push-action@v4
         with:
@@ -75,6 +103,19 @@ jobs:
           build-args: |
             TARGETOS=linux
             TARGETARCH=amd64
+          no-cache: true
+          outputs: type=docker,dest=/tmp/image.tar
+
+      # Image verification
+      - name: Verify built image
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "=== Loading built image ==="
+          docker load < /tmp/image.tar
+          echo "=== Image details ==="
+          docker images | grep ${{ github.repository }}
+          echo "=== Image inspection ==="
+          docker inspect $(docker images -q | head -n 1)
 
       - name: Install Crossplane CLI
         run: |
@@ -85,18 +126,14 @@ jobs:
         run: |
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
-            export REGISTRY_IMAGE=${CONTROLLER_IMAGE}
-            export VERSION=${VERSION}
-            envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
-            mv package/crossplane.yaml.tmp package/crossplane.yaml
           else
-            export REGISTRY_IMAGE=${CONTROLLER_IMAGE}
-            export VERSION=latest
-            envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
-            mv package/crossplane.yaml.tmp package/crossplane.yaml
+            VERSION=latest
           fi
+          export REGISTRY_IMAGE=${CONTROLLER_IMAGE}
+          export VERSION=${VERSION}
+          envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
+          mv package/crossplane.yaml.tmp package/crossplane.yaml
 
-          # Debug: Print package contents and structure
           echo "=== Package Structure ==="
           find . -type f -name "*.yaml" -exec echo {} \; -exec cat {} \;
           
@@ -122,4 +159,4 @@ jobs:
 
       - name: Logout from GitHub Container Registry
         if: always()
-        run: docker logout ghcr.io #test
+        run: docker logout ghcr.io

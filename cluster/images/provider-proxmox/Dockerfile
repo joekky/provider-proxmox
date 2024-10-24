@@ -1,30 +1,30 @@
 FROM alpine:3.18
 
-# Add necessary packages
+# Add necessary packages (added for SSL/TLS support and basic shell)
 RUN apk --no-cache add ca-certificates bash
 
-# Set build arguments
+# Build arguments for targeting specific OS/arch
 ARG TARGETOS
 ARG TARGETARCH
 
-# Set environment variables
+# Standard Crossplane provider user ID
 ENV USER_ID=65532
 
-# Create a non-root user and group (using standardized USER_ID)
+# Create non-root user with specific ID
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup -u ${USER_ID}
 
-# Copy the provider binary
+# Copy binary with explicit path that matches build context
 COPY bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/provider
 
-# Set permissions
+# Set proper permissions (executable and owned by appuser)
 RUN chmod 755 /usr/local/bin/provider && \
     chown -R appuser:appgroup /usr/local/bin/provider
 
-# Expose the default Crossplane provider port
+# Standard Crossplane provider port
 EXPOSE 8080
 
 # Switch to non-root user
 USER ${USER_ID}
 
-# Set the entrypoint
+# Set explicit entrypoint (removed CMD)
 ENTRYPOINT ["/usr/local/bin/provider"]
