@@ -36,9 +36,8 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 type connector struct {
 	kube client.Client
 }
-
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
-	cr, ok := mg.(*v1alpha1.VirtualMachine)
+	_, ok := mg.(*v1alpha1.VirtualMachine)
 	if !ok {
 		return nil, errors.New("not a VirtualMachine resource")
 	}
