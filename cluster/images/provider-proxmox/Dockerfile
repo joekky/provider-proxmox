@@ -1,8 +1,8 @@
 # Base image
 FROM alpine:3.18
 
-# Add necessary packages
-RUN apk --no-cache add ca-certificates bash
+# Add necessary packages, including file utility
+RUN apk --no-cache add ca-certificates bash file
 
 # Set build arguments
 ARG TARGETOS
