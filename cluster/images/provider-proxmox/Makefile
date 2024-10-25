@@ -35,22 +35,21 @@ generate:
 	@$(OK) Generating code
 
 .PHONY: generate
-
+#
 # ====================================================================================
 # Image Targets
 
 img.build:
 	@$(INFO) Building Docker image for $(IMAGE_NAME)
 	@mkdir -p $(IMAGE_TEMP_DIR)
-	@if [ ! -f Dockerfile ]; then echo "Error: Dockerfile not found!" && exit 1; fi
-	@cp Dockerfile $(IMAGE_TEMP_DIR) || (echo "Error: Dockerfile not found!" && exit 1)
-	@cp -r ../../../_output/bin/ $(IMAGE_TEMP_DIR)/bin
+	@cp Dockerfile $(IMAGE_TEMP_DIR)
+	@cp -r ../../../_output/bin/linux_amd64 $(IMAGE_TEMP_DIR)/bin
 	@cd $(IMAGE_TEMP_DIR) && docker buildx build \
 		--platform $(IMAGE_PLATFORM) \
 		-t $(IMAGE_NAME) \
-		--push \
+		--load \
 		. || $(FAIL)
-	@$(OK) Docker image built and pushed: $(IMAGE_NAME)
+	@$(OK) Docker image built: $(IMAGE_NAME)
 
 img.publish:
 	@$(INFO) Publishing $(IMAGE_NAME)
