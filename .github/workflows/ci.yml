@@ -59,20 +59,14 @@ jobs:
       # Direct Docker build without using xpkg
       - name: Build and push Docker image
         run: |
-          echo "=== Building Docker image ==="
-          docker build \
-            --build-arg TARGETOS=linux \
-            --build-arg TARGETARCH=amd64 \
-            -t ${{ env.CONTROLLER_IMAGE }}:${{ env.VERSION }} \
-            -f cluster/images/provider-proxmox/Dockerfile .
-          
-          echo "=== Verifying image ==="
-          docker images
-          
+          make image.build
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            echo "=== Pushing image ==="
-            docker push ${{ env.CONTROLLER_IMAGE }}:${{ env.VERSION }}
+            make image.publish
           fi
+        env:
+          VERSION: ${{ env.VERSION }}
+          REGISTRY: ghcr.io
+          REGISTRY_ORG: ${{ github.repository_owner }}
 
       # Build Crossplane package after Docker image is built
       - name: Build and push provider package
@@ -103,17 +97,26 @@ jobs:
         if: always()
         run: docker logout ghcr.io
 
-      - name: Verify Docker image content
+      - name: Verify Docker image
         run: |
-          # Create a temporary container and check the binary
-          CONTAINER_ID=$(docker create ${{ env.CONTROLLER_IMAGE }}:${{ env.VERSION }})
+          CONTAINER_ID=$(docker create $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION))
           docker cp $CONTAINER_ID:/usr/local/bin/provider ./extracted-provider
-          ls -lh ./extracted-provider
-          file ./extracted-provider
-          docker rm $CONTAINER_ID
           
+          # Verify binary exists and is executable
           if [ ! -x ./extracted-provider ]; then
-            echo "Error: Provider binary is not executable or missing from the image"
+            echo "Error: Provider binary not found or not executable"
             exit 1
           fi
-#
+          
+          # Verify binary size (should be >10MB for a typical provider)
+          BINARY_SIZE=$(stat -f%z ./extracted-provider)
+          if [ "$BINARY_SIZE" -lt 10000000 ]; then
+            echo "Error: Binary seems too small ($BINARY_SIZE bytes)"
+            exit 1
+          fi
+          
+          echo "Binary verification passed:"
+          ls -lh ./extracted-provider
+          file ./extracted-provider
+          
+          docker rm $CONTAINER_ID

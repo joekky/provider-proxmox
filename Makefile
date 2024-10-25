@@ -64,4 +64,17 @@ build.xpkg:
 	@mkdir -p $(OUTPUT_DIR)/package
 	@cp -r package/* $(OUTPUT_DIR)/package
 	@cd $(OUTPUT_DIR) && $(XPKG) build -d $(OUTPUT_DIR)/package --ignore ".github/" --ignore "examples/" -o $(PROJECT_NAME).xpkg
+
+.PHONY: images
+images: image.build
+
+.PHONY: image.build
+image.build:
+	@$(MAKE) -C cluster/images/provider-proxmox img.build \
+		IMAGE=$(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION)
+
+.PHONY: image.publish
+image.publish:
+	@$(MAKE) -C cluster/images/provider-proxmox img.publish \
+		IMAGE=$(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION)
 # ====================================================================================

@@ -1,5 +1,5 @@
 # Base image
-FROM alpine:3.18
+FROM gcr.io/distroless/static:nonroot
 
 # Set build arguments
 ARG TARGETOS
@@ -9,7 +9,7 @@ ARG TARGETARCH
 RUN apk --no-cache add ca-certificates
 
 WORKDIR /usr/local/bin
-COPY bin/${TARGETOS}_${TARGETARCH}/provider .
+COPY bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/
 RUN chmod +x provider
 
 USER 65532
