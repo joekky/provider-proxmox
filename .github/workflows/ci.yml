@@ -2,7 +2,7 @@ name: CI
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ["v*"]
   pull_request:
     branches: [main]
   workflow_dispatch: {}
@@ -36,12 +36,12 @@ jobs:
           echo "=== Binary Verification ==="
           BINARY_SIZE=$(stat -c%s _output/bin/linux_amd64/provider)
           echo "Binary size: $(du -h _output/bin/linux_amd64/provider | cut -f1)"
-          
+
           if [ "$BINARY_SIZE" -lt 10000000 ]; then
             echo "Error: Local binary seems too small ($BINARY_SIZE bytes)"
             exit 1
           fi
-          
+
           file _output/bin/linux_amd64/provider
 
       - name: Set up Docker Buildx
@@ -83,16 +83,16 @@ jobs:
           # Install Crossplane CLI
           curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
           sudo mv crossplane /usr/local/bin/
-          
+
           # Update crossplane.yaml
           export VERSION=${{ env.VERSION }}
           export REGISTRY_IMAGE=${{ env.CONTROLLER_IMAGE }}
           envsubst < package/crossplane.yaml > package/crossplane.yaml.tmp
           mv package/crossplane.yaml.tmp package/crossplane.yaml
-          
+
           # Build package
           crossplane xpkg build -o provider-proxmox.xpkg --ignore ".github/**/*.yml" --package-root ./package --verbose
-          
+
           # Push package
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             crossplane xpkg push ${{ env.IMAGE_NAME }}:${{ env.VERSION }} -f provider-proxmox.xpkg
@@ -109,22 +109,22 @@ jobs:
         run: |
           CONTAINER_ID=$(docker create ghcr.io/${{ github.repository_owner }}/provider-proxmox:${{ env.VERSION }})
           docker cp $CONTAINER_ID:/usr/local/bin/provider ./extracted-provider
-          
+
           # Verify binary exists and is executable
           if [ ! -x ./extracted-provider ]; then
             echo "Error: Provider binary not found or not executable"
             exit 1
           fi
-          
+
           # Verify binary size (should be >10MB for a typical provider)
           BINARY_SIZE=$(stat -c%s ./extracted-provider)
           if [ "$BINARY_SIZE" -lt 10000000 ]; then
             echo "Error: Binary seems too small ($BINARY_SIZE bytes)"
             exit 1
           fi
-          
+
           echo "Binary verification passed:"
           ls -lh ./extracted-provider
           file ./extracted-provider
-          
-          docker rm $CONTAINER_ID
+
+          # docker rm $CONTAINER_ID
