@@ -42,4 +42,9 @@ image.build:
 		-f cluster/images/provider-proxmox/Dockerfile .
 	@$(OK) Building Docker image $(IMAGE)
 
-.PHONY: image.build
+image.publish:
+	@$(INFO) Publishing Docker image
+	@docker push $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION)
+	@$(OK) Publishing Docker image
+
+.PHONY: image.build image.publish
