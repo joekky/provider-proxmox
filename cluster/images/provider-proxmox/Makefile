@@ -4,6 +4,8 @@ PLATFORMS ?= linux_amd64 linux_arm64
 
 # ====================================================================================
 # Setup Project
+PROJECT_NAME := provider-proxmox
+PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 
 # -include will silently skip missing files
 -include ../../../build/makelib/common.mk
@@ -18,14 +20,14 @@ img.build:
 	@$(INFO) docker build $(IMAGE)
 	@cp Dockerfile $(IMAGE_TEMP_DIR)
 	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
-	@cd $(IMAGE_TEMP_DIR) && $(BUILD_COMMAND) \
+	@cd $(IMAGE_TEMP_DIR) && docker build \
 		-t $(IMAGE) \
 		.
 	@$(OK) docker build $(IMAGE)
 
 img.publish:
 	@$(INFO) Publishing $(IMAGE)
-	@$(BUILD_COMMAND) push $(IMAGE)
+	@docker push $(IMAGE)
 	@$(OK) Publishing $(IMAGE)
 
 .PHONY: all
