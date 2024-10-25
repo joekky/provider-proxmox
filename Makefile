@@ -19,7 +19,7 @@ build: generate
 	@mkdir -p _output/bin/linux_amd64
 	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 		-tags netgo \
-		-ldflags '-extldflags "-static"' \
+		-ldflags '-w -extldflags "-static"' \
 		-o _output/bin/linux_amd64/provider \
 		./cmd/provider
 	@$(OK) Building provider binary
@@ -39,9 +39,11 @@ generate:
 
 image.build:
 	@$(INFO) Building Docker image $(IMAGE)
-	@docker build \
+	@docker buildx build \
+		--platform linux/amd64 \
 		--build-arg TARGETOS=linux \
 		--build-arg TARGETARCH=amd64 \
+		--load \
 		-t $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION) \
 		-f cluster/images/provider-proxmox/Dockerfile .
 	@$(OK) Building Docker image $(IMAGE)
@@ -52,3 +54,4 @@ image.publish:
 	@$(OK) Publishing Docker image
 
 .PHONY: image.build image.publish
+#

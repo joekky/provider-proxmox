@@ -6,8 +6,8 @@ ARG TARGETOS
 ARG TARGETARCH
 
 WORKDIR /usr/local/bin
-COPY _output/bin/${TARGETOS}_${TARGETARCH}/provider .
+COPY _output/bin/linux_amd64/provider .
+
 USER 65532
-CMD ["/usr/local/bin/provider"]
 ENTRYPOINT ["/usr/local/bin/provider"]
 #
