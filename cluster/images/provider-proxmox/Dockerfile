@@ -5,13 +5,8 @@ FROM gcr.io/distroless/static:nonroot
 ARG TARGETOS
 ARG TARGETARCH
 
-# Add necessary packages
-RUN apk --no-cache add ca-certificates
-
 WORKDIR /usr/local/bin
-COPY _output/bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/
-RUN chmod +x provider
-
+COPY _output/bin/${TARGETOS}_${TARGETARCH}/provider .
 USER 65532
 ENTRYPOINT ["/usr/local/bin/provider"]
 #
