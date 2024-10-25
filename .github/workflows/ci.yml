@@ -34,9 +34,9 @@ jobs:
         run: |
           make build
           echo "=== Binary Verification ==="
-          ls -la bin/linux_amd64/provider
-          file bin/linux_amd64/provider
-          echo "Binary size: $(du -h bin/linux_amd64/provider | cut -f1)"
+          ls -la _output/bin/linux_amd64/provider
+          file _output/bin/linux_amd64/provider
+          echo "Binary size: $(du -h _output/bin/linux_amd64/provider | cut -f1)"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
