@@ -8,28 +8,24 @@ include ../../../build/makelib/common.mk
 # ====================================================================================
 #  Options
 
-include ../../../build/makelib/imagelight.mk
+include ../../../build/makelib/image.mk
 
 # ====================================================================================
 # Targets
 
 img.build:
-	@$(INFO) Building provider image
-	@$(MAKE) BUILD_ARGS="--load" img.build.shared
+	@$(INFO) docker build $(IMAGE)
+	@cp Dockerfile $(IMAGE_TEMP_DIR)
+	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
+	@cd $(IMAGE_TEMP_DIR) && $(BUILD_COMMAND) \
+		-t $(IMAGE) \
+		.
 	@$(OK) docker build $(IMAGE)
 
-img.build.shared:
-	@cp Dockerfile $(IMAGE_TEMP_DIR) || $(FAIL)
-	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin || $(FAIL)
-	@docker buildx build $(BUILD_ARGS) \
-		--platform $(IMAGE_PLATFORMS) \
-		-t $(IMAGE) \
-		$(IMAGE_TEMP_DIR) || $(FAIL)
-
 img.publish:
-	@$(INFO) Publishing image $(IMAGE)
-	@docker push $(IMAGE)
-	@$(OK) Published image $(IMAGE)
+	@$(INFO) Publishing $(IMAGE)
+	@$(BUILD_COMMAND) push $(IMAGE)
+	@$(OK) Publishing $(IMAGE)
 
 .PHONY: all
 all: img.build img.publish
