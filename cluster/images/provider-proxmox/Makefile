@@ -18,11 +18,12 @@ PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 
 img.build:
 	@$(INFO) docker build $(IMAGE)
-	@cp Dockerfile $(IMAGE_TEMP_DIR)
-	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
-	@cd $(IMAGE_TEMP_DIR) && docker build \
+	@cp Dockerfile $(IMAGE_TEMP_DIR) || $(FAIL)
+	@cp -r ../../../_output/bin/ $(IMAGE_TEMP_DIR)/bin || $(FAIL)
+	@cd $(IMAGE_TEMP_DIR) && docker buildx build \
+		--platform $(IMAGE_PLATFORM) \
 		-t $(IMAGE) \
-		.
+		. || $(FAIL)
 	@$(OK) docker build $(IMAGE)
 
 img.publish:
