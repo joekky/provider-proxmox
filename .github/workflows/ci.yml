@@ -102,3 +102,18 @@ jobs:
       - name: Logout from GitHub Container Registry
         if: always()
         run: docker logout ghcr.io
+
+      - name: Verify Docker image content
+        run: |
+          # Create a temporary container and check the binary
+          CONTAINER_ID=$(docker create ${{ env.CONTROLLER_IMAGE }}:${{ env.VERSION }})
+          docker cp $CONTAINER_ID:/usr/local/bin/provider ./extracted-provider
+          ls -lh ./extracted-provider
+          file ./extracted-provider
+          docker rm $CONTAINER_ID
+          
+          if [ ! -x ./extracted-provider ]; then
+            echo "Error: Provider binary is not executable or missing from the image"
+            exit 1
+          fi
+#
