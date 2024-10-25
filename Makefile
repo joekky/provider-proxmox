@@ -33,27 +33,3 @@ generate:
 	@$(OK) Generating code
 
 .PHONY: generate
-
-# ====================================================================================
-# Image Targets
-
-image.build:
-	@$(INFO) Building Docker image $(IMAGE)
-	@echo "Current directory: $$(pwd)"
-	@echo "Binary size before build: $$(ls -lh _output/bin/linux_amd64/provider)"
-	@cp Dockerfile $(IMAGE_TEMP_DIR)
-	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
-	@cd $(IMAGE_TEMP_DIR) && $(BUILD_COMMAND) \
-		-t $(IMAGE) \
-		.
-	@echo "Image details after build:"
-	@docker inspect $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION) | grep -A 3 "Config"
-	@$(OK) Building Docker image $(IMAGE)
-
-image.publish:
-	@$(INFO) Publishing Docker image
-	@docker push $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION)
-	@$(OK) Publishing Docker image
-
-.PHONY: image.build image.publish
-#
