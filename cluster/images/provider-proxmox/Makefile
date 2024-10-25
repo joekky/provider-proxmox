@@ -1,9 +1,15 @@
 IMAGE_NAME ?= ghcr.io/joekky/provider-proxmox
 
+PLATFORMS ?= linux_amd64 linux_arm64
+
 # ====================================================================================
 # Setup Project
 
-include ../../../build/makelib/common.mk
+# -include will silently skip missing files
+-include ../../../build/makelib/common.mk
+-include ../../../build/makelib/output.mk
+-include ../../../build/makelib/golang.mk
+-include ../../../build/makelib/imagelight.mk
 
 # ====================================================================================
 #  Options
@@ -15,7 +21,7 @@ include ../../../build/makelib/image.mk
 
 img.build:
 	@$(INFO) docker build $(IMAGE)
-	@cp Dockerfile $(IMAGE_TEMP_DIR)
+	@cp ../../../cluster/images/provider-proxmox/Dockerfile $(IMAGE_TEMP_DIR)
 	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
 	@cd $(IMAGE_TEMP_DIR) && $(BUILD_COMMAND) \
 		-t $(IMAGE) \

@@ -9,7 +9,7 @@ PLATFORMS ?= linux_amd64 linux_arm64
 -include build/makelib/common.mk
 -include build/makelib/output.mk
 -include build/makelib/golang.mk
--include build/makelib/image.mk
+-include build/makelib/imagelight.mk
 
 # ====================================================================================
 # Targets
