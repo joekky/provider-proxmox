@@ -34,9 +34,15 @@ jobs:
         run: |
           make build
           echo "=== Binary Verification ==="
-          ls -la _output/bin/linux_amd64/provider
-          file _output/bin/linux_amd64/provider
+          BINARY_SIZE=$(stat -c%s _output/bin/linux_amd64/provider)
           echo "Binary size: $(du -h _output/bin/linux_amd64/provider | cut -f1)"
+          
+          if [ "$BINARY_SIZE" -lt 10000000 ]; then
+            echo "Error: Local binary seems too small ($BINARY_SIZE bytes)"
+            exit 1
+          fi
+          
+          file _output/bin/linux_amd64/provider
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
