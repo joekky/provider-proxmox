@@ -39,13 +39,15 @@ generate:
 
 image.build:
 	@$(INFO) Building Docker image $(IMAGE)
-	@docker buildx build \
-		--platform linux/amd64 \
-		--build-arg TARGETOS=linux \
-		--build-arg TARGETARCH=amd64 \
-		--load \
-		-t $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION) \
-		-f cluster/images/provider-proxmox/Dockerfile .
+	@echo "Current directory: $$(pwd)"
+	@echo "Binary size before build: $$(ls -lh _output/bin/linux_amd64/provider)"
+	@cp Dockerfile $(IMAGE_TEMP_DIR)
+	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
+	@cd $(IMAGE_TEMP_DIR) && $(BUILD_COMMAND) \
+		-t $(IMAGE) \
+		.
+	@echo "Image details after build:"
+	@docker inspect $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION) | grep -A 3 "Config"
 	@$(OK) Building Docker image $(IMAGE)
 
 image.publish:
