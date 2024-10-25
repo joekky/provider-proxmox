@@ -68,14 +68,12 @@ jobs:
           else
             echo "VERSION=latest" >> $GITHUB_ENV
           fi
+        shell: bash
 
-      # Direct Docker build without using xpkg
+      # Build and push Docker image
       - name: Build and push Docker image
         run: |
           make -C cluster/images/provider-proxmox img.build
-          if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            make -C cluster/images/provider-proxmox img.publish
-          fi
         env:
           VERSION: ${{ env.VERSION }}
           REGISTRY: ghcr.io
@@ -133,3 +131,6 @@ jobs:
           file ./extracted-provider
           
           docker rm $CONTAINER_ID
+
+      - name: List Docker images
+        run: docker images
