@@ -73,7 +73,7 @@ jobs:
       # Build and push Docker image
       - name: Build and push Docker image
         run: |
-          make -C cluster/images/provider-proxmox img.build
+          make img.build
         env:
           VERSION: ${{ env.VERSION }}
           REGISTRY: ghcr.io
