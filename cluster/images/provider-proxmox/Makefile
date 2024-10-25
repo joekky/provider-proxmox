@@ -18,6 +18,7 @@ PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 
 img.build:
 	@$(INFO) docker build $(IMAGE)
+	@mkdir -p $(IMAGE_TEMP_DIR)
 	@cp Dockerfile $(IMAGE_TEMP_DIR) || $(FAIL)
 	@cp -r ../../../_output/bin/ $(IMAGE_TEMP_DIR)/bin || $(FAIL)
 	@cd $(IMAGE_TEMP_DIR) && docker buildx build \

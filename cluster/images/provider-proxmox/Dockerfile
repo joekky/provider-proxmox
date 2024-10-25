@@ -5,9 +5,7 @@ FROM gcr.io/distroless/static:nonroot
 ARG TARGETOS
 ARG TARGETARCH
 
-WORKDIR /usr/local/bin
-COPY bin/${TARGETOS}_${TARGETARCH}/provider .
-
+COPY bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/
 USER 65532
 ENTRYPOINT ["/usr/local/bin/provider"]
 #
