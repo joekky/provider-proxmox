@@ -72,9 +72,9 @@ jobs:
       # Direct Docker build without using xpkg
       - name: Build and push Docker image
         run: |
-          make image.build
+          make docker.build
           if [[ "${{ github.event_name }}" != "pull_request" ]]; then
-            make image.publish
+            make docker.push
           fi
         env:
           VERSION: ${{ env.VERSION }}
