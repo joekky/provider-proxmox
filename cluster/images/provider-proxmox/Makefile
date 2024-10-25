@@ -12,16 +12,11 @@ PLATFORMS ?= linux_amd64 linux_arm64
 -include ../../../build/makelib/imagelight.mk
 
 # ====================================================================================
-#  Options
-
-include ../../../build/makelib/image.mk
-
-# ====================================================================================
 # Targets
 
 img.build:
 	@$(INFO) docker build $(IMAGE)
-	@cp ../../../cluster/images/provider-proxmox/Dockerfile $(IMAGE_TEMP_DIR)
+	@cp Dockerfile $(IMAGE_TEMP_DIR)
 	@cp -r $(OUTPUT_DIR)/bin/ $(IMAGE_TEMP_DIR)/bin
 	@cd $(IMAGE_TEMP_DIR) && $(BUILD_COMMAND) \
 		-t $(IMAGE) \
