@@ -3,25 +3,13 @@ apiVersion: meta.pkg.crossplane.io/v1
 kind: Provider
 metadata:
   name: provider-proxmox
+  annotations:
+    meta.crossplane.io/maintainer: Proxmox Provider Team
+    meta.crossplane.io/source: github.com/joekky/provider-proxmox
+    meta.crossplane.io/license: Apache-2.0
+    meta.crossplane.io/description: |
+      A Crossplane provider for Proxmox VE infrastructure management.
+    friendly-name.meta.crossplane.io: Provider Proxmox
 spec:
   controller:
     image: ${REGISTRY_IMAGE}:${VERSION}
-    command:
-      - /usr/local/bin/provider
-    args:
-      - --debug
-    env:
-      - name: POD_NAMESPACE
-        valueFrom:
-          fieldRef:
-            fieldPath: metadata.namespace
-    resources:
-      limits:
-        cpu: 100m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 256Mi
-
-
-
