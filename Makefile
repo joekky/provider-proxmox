@@ -4,10 +4,15 @@ PROJECT_NAME := provider-proxmox
 PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 PLATFORMS ?= linux_amd64 linux_arm64
 
-# Setup build submodule
+# -include will silently skip missing files, which allows us
+# to load those files with a target in the Makefile. If only
+# "include" was used, the make command would fail and refuse
+# to run a target until the include commands succeeded.
 -include build/makelib/common.mk
--include build/makelib/output.mk
--include build/makelib/golang.mk
+
+# Tools
+CONTROLLER_GEN := $(TOOLS_HOST_DIR)/controller-gen
+CROSSPLANE := $(TOOLS_HOST_DIR)/crossplane
 
 # ====================================================================================
 # Setup Output
@@ -26,13 +31,13 @@ PLATFORMS ?= linux_amd64 linux_arm64
 
 # Generate code and manifests
 .PHONY: generate
-generate: controller-gen
+generate: tools
 	@$(INFO) Generating DeepCopy functions
 	@$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 	@$(OK) Generating DeepCopy functions
 
 .PHONY: manifests
-manifests: controller-gen
+manifests: tools
 	@$(INFO) Generating CRDs
 	@$(CONTROLLER_GEN) crd paths="./..." output:crd:artifacts:config=package/crds
 	@$(OK) Generating CRDs
@@ -57,3 +62,14 @@ image.publish:
 	@$(MAKE) -C cluster/images/provider-proxmox img.publish \
 		IMAGE=$(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION)
 	@$(OK) Publishing provider image
+
+# ====================================================================================
+# Tools
+
+# Generate manifests e.g. CRD, RBAC etc.
+$(CONTROLLER_GEN): $(TOOLS_DIR)
+	@echo "Installing controller-gen"
+	@GOBIN=$(TOOLS_HOST_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3
+
+tools: $(CONTROLLER_GEN) $(CROSSPLANE)
+.PHONY: tools
