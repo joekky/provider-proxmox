@@ -17,20 +17,20 @@ PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 # Targets
 
 img.build:
-	@$(INFO) docker build $(IMAGE)
+	@$(INFO) Building Docker image for $(IMAGE)
 	@mkdir -p $(IMAGE_TEMP_DIR)
-	@cp Dockerfile $(IMAGE_TEMP_DIR)
+	@cp Dockerfile $(IMAGE_TEMP_DIR) || (echo "Error: Dockerfile not found!" && exit 1)
 	@cp -r ../../../_output/bin/ $(IMAGE_TEMP_DIR)/bin
 	@cd $(IMAGE_TEMP_DIR) && docker buildx build \
 		--platform $(IMAGE_PLATFORM) \
 		-t $(IMAGE) \
 		. || $(FAIL)
-	@$(OK) docker build $(IMAGE)
+	@$(OK) Docker image built: $(IMAGE)
 
 img.publish:
 	@$(INFO) Publishing $(IMAGE)
 	@docker push $(IMAGE)
-	@$(OK) Publishing $(IMAGE)
+	@$(OK) Published $(IMAGE)
 
 .PHONY: all
 all: img.build img.publish
