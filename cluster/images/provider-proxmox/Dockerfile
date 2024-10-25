@@ -9,7 +9,7 @@ ARG TARGETARCH
 RUN apk --no-cache add ca-certificates
 
 WORKDIR /usr/local/bin
-COPY bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/
+COPY _output/bin/${TARGETOS}_${TARGETARCH}/provider /usr/local/bin/
 RUN chmod +x provider
 
 USER 65532
