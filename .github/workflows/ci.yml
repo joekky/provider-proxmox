@@ -101,7 +101,7 @@ jobs:
 
       - name: Verify Docker image
         run: |
-          CONTAINER_ID=$(docker create $(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION))
+          CONTAINER_ID=$(docker create ghcr.io/${{ github.repository_owner }}/provider-proxmox:${{ env.VERSION }})
           docker cp $CONTAINER_ID:/usr/local/bin/provider ./extracted-provider
           
           # Verify binary exists and is executable
@@ -111,7 +111,7 @@ jobs:
           fi
           
           # Verify binary size (should be >10MB for a typical provider)
-          BINARY_SIZE=$(stat -f%z ./extracted-provider)
+          BINARY_SIZE=$(stat -c%s ./extracted-provider)
           if [ "$BINARY_SIZE" -lt 10000000 ]; then
             echo "Error: Binary seems too small ($BINARY_SIZE bytes)"
             exit 1
