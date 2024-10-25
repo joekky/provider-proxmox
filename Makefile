@@ -33,3 +33,15 @@ generate:
 	@$(OK) Generating code
 
 .PHONY: generate
+
+img.build:
+	@$(INFO) Building Docker image for $(IMAGE_NAME)
+	@mkdir -p $(IMAGE_TEMP_DIR)
+	@cp Dockerfile $(IMAGE_TEMP_DIR)
+	@cp -r ../../../_output/bin/linux_amd64 $(IMAGE_TEMP_DIR)/bin
+	@cd $(IMAGE_TEMP_DIR) && docker buildx build \
+		--platform $(IMAGE_PLATFORM) \
+		-t $(IMAGE_NAME) \
+		--load \
+		. || $(FAIL)
+	@$(OK) Docker image built: $(IMAGE_NAME)
