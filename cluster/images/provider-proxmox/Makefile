@@ -29,9 +29,10 @@ img.build:
 	@$(OK) Docker image built: $(IMAGE_NAME)
 
 img.publish:
-	@$(INFO) Publishing $(IMAGE)
-	@docker push $(IMAGE)
-	@$(OK) Published $(IMAGE)
+	@$(INFO) Publishing $(IMAGE_NAME)
+	@echo "Pushing image: $(IMAGE_NAME)"
+	@docker push $(IMAGE_NAME) || $(FAIL)
+	@$(OK) Published $(IMAGE_NAME)
 
 .PHONY: all
 all: img.build img.publish
