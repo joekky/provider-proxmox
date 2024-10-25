@@ -17,7 +17,11 @@ PLATFORMS ?= linux_amd64 linux_arm64
 build: generate
 	@$(INFO) Building provider binary
 	@mkdir -p _output/bin/linux_amd64
-	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o _output/bin/linux_amd64/provider ./cmd/provider
+	@CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+		-tags netgo \
+		-ldflags '-extldflags "-static"' \
+		-o _output/bin/linux_amd64/provider \
+		./cmd/provider
 	@$(OK) Building provider binary
 
 .PHONY: build
