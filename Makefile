@@ -4,6 +4,10 @@ PROJECT_NAME := provider-proxmox
 PROJECT_REPO := github.com/joekky/$(PROJECT_NAME)
 PLATFORMS ?= linux_amd64 linux_arm64
 
+# Create cache directory for tools
+CACHE_DIR := .cache
+TOOLS_DIR := $(CACHE_DIR)/tools
+
 # -include will silently skip missing files, which allows us
 # to load those files with a target in the Makefile. If only
 # "include" was used, the make command would fail and refuse
@@ -11,8 +15,12 @@ PLATFORMS ?= linux_amd64 linux_arm64
 -include build/makelib/common.mk
 
 # Tools
-CONTROLLER_GEN := $(TOOLS_HOST_DIR)/controller-gen
-CROSSPLANE := $(TOOLS_HOST_DIR)/crossplane
+CONTROLLER_GEN := $(TOOLS_DIR)/controller-gen
+CROSSPLANE := $(TOOLS_DIR)/crossplane
+
+# Ensure tools directory exists
+$(TOOLS_DIR):
+	mkdir -p $(TOOLS_DIR)
 
 # ====================================================================================
 # Setup Output
@@ -50,7 +58,7 @@ build: generate manifests
 	@$(OK) Building provider binary
 
 .PHONY: image.build
-image.build:
+image.build: $(TOOLS_DIR)
 	@$(INFO) Building provider image
 	@$(MAKE) -C cluster/images/provider-proxmox img.build \
 		IMAGE=$(REGISTRY)/$(REGISTRY_ORG)/$(PROJECT_NAME):$(VERSION)
@@ -69,7 +77,7 @@ image.publish:
 # Generate manifests e.g. CRD, RBAC etc.
 $(CONTROLLER_GEN): $(TOOLS_DIR)
 	@echo "Installing controller-gen"
-	@GOBIN=$(TOOLS_HOST_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3
+	@GOBIN=$(TOOLS_DIR) go install sigs.k8s.io/controller-tools/cmd/controller-gen@v0.11.3
 
 tools: $(CONTROLLER_GEN) $(CROSSPLANE)
 .PHONY: tools

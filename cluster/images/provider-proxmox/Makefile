@@ -14,7 +14,7 @@ include ../../../build/makelib/imagelight.mk
 # Targets
 
 img.build:
-	@$(INFO) docker build $(IMAGE)
+	@$(INFO) Building provider image
 	@$(MAKE) BUILD_ARGS="--load" img.build.shared
 	@$(OK) docker build $(IMAGE)
 
